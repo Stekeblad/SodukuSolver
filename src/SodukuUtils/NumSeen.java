@@ -1,5 +1,6 @@
 package SodukuUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,8 +15,8 @@ public class NumSeen {
      * Constructor
      */
     public NumSeen() {
-        seen = null;
-        unseen = null;
+        seen = new ArrayList<Integer>();
+        unseen = new ArrayList<Integer>();
         for (int i = 1; i < 10; i++)
             unseen.add(i);
     }

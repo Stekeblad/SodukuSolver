@@ -6,6 +6,7 @@ import SodukuUtils.NumSeen;
 import Utils.ListToArray;
 import Utils.ShrinkArray;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,6 +67,9 @@ public class SodukuSolver {
 
         for(int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
+                if(playfield[r][c] != 0)
+                    continue;
+
                 int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
                 int match = findSingleCommon(squareResult[squareNumber],
                         rowResult[r], columnResult[c]);
@@ -161,16 +165,13 @@ public class SodukuSolver {
         if (sqList.length == 0 || rowList.length == 0 || colList.length == 0)
             return null; // One or more of the square, the row or the column is already solved. Return.
 
-        List<Integer> sq = null;
-        List<Integer> row = null;
-        List<Integer> col = null;
+        List<Integer> sq = new ArrayList<>();
+        List<Integer> row = new ArrayList<>();
+        List<Integer> col = new ArrayList<>();
 
-        for (int i = 0; i < sqList.length; i++)
-            sq.add(sqList[i]);
-        for (int i = 0; i < rowList.length; i++)
-            row.add(rowList[i]);
-        for (int i = 0; i < colList.length; i++)
-            col.add(colList[i]);
+        for (int aSqList : sqList) sq.add(aSqList);
+        for (int aRowList : rowList) row.add(aRowList);
+        for (int aColList : colList) col.add(aColList);
 
         Collections.sort(sq);
         Collections.sort(row);
@@ -193,10 +194,10 @@ public class SodukuSolver {
             }
         }
         while (rowLen > colLen) {
-            row.remove(rowLen--);
+            row.remove(--rowLen);
         }
         while (rowLen < colLen) {
-            col.remove(colLen--);
+            col.remove(--colLen);
         }
 
         // row and col are now identical, hopefully. Now to Sq as well
@@ -215,20 +216,25 @@ public class SodukuSolver {
             }
         }
         while (rowLen > sqLen) {
-            row.remove(rowLen--);
+            row.remove(--rowLen);
         }
         while (rowLen < sqLen) {
-            sq.remove(sqLen--);
+            sq.remove(--sqLen);
         }
         // now should sq == col && col == row ( and therefor sq == row )
+        if (row.isEmpty())
+            return new int[] {0};
         return ListToArray.integerListToIntArray(row);
 
     }
     private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) {
         int[] result = findCommons(sqList, rowList, colList);
-        if  (result.length == 1)
-            return result[0];
-        else
-            return 0;
+        if (result != null) {
+            if  (result.length == 1)
+                return result[0];
+            else
+                return 0;
+        }
+        return 0;
     }
 }
