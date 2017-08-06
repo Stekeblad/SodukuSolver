@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="847.0" prefWidth="669.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.AppController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="847.0" prefWidth="958.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.AppController">
     <children>
         <Rectangle arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="600.0" layoutX="30.0" layoutY="30.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" width="600.0" />
         <Line endY="600.0" layoutX="230.0" layoutY="30.0" />
@@ -42,7 +42,20 @@
       <TextField fx:id="checkResult" layoutX="482.0" layoutY="716.0" prefHeight="25.0" prefWidth="182.0" />
       <Button fx:id="tst" disable="true" layoutX="416.0" layoutY="716.0" mnemonicParsing="false" onAction="#CheckCells" text="Test" />
       <Button fx:id="solve" disable="true" layoutX="416.0" layoutY="747.0" mnemonicParsing="false" onAction="#solve" text="Solve" />
-      <ProgressIndicator fx:id="prog_solving" layoutX="298.0" layoutY="669.0" prefHeight="95.0" prefWidth="95.0" visible="false" />
+      <ProgressIndicator fx:id="progressSolving" layoutX="298.0" layoutY="669.0" prefHeight="95.0" prefWidth="95.0" visible="false" />
       <Label fx:id="text_solving" layoutX="298.0" layoutY="772.0" prefHeight="17.0" prefWidth="85.0" text="Solving..." textAlignment="CENTER" visible="false" />
+      <Pane layoutX="641.0" layoutY="35.0" prefHeight="376.0" prefWidth="303.0">
+         <children>
+            <ListView fx:id="listUnseenSq" layoutX="14.0" layoutY="32.0" prefHeight="200.0" prefWidth="95.0" />
+            <Label layoutX="55.0" layoutY="14.0" text="sq" />
+            <ListView fx:id="listUnseenRow" layoutX="104.0" layoutY="32.0" prefHeight="200.0" prefWidth="95.0" />
+            <Label layoutX="142.0" layoutY="14.0" text="row" />
+            <ListView fx:id="listUnseenCol" layoutX="199.0" layoutY="32.0" prefHeight="200.0" prefWidth="95.0" />
+            <Label layoutX="236.0" layoutY="15.0" text="col" />
+         </children>
+      </Pane>
+      <CheckBox fx:id="checkboxDebug" layoutX="30.0" layoutY="661.0" mnemonicParsing="false" text="Show debug" />
+      <Button fx:id="buttonDefaultSoduku" disable="true" layoutX="793.0" layoutY="551.0" mnemonicParsing="false" onAction="#loadDefaultSoduku" text="Load a Default" />
+      <ListView fx:id="listDefaultSoduku" layoutX="727.0" layoutY="589.0" prefHeight="200.0" prefWidth="200.0" />
     </children>
 </Pane>

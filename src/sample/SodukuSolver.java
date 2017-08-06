@@ -3,23 +3,33 @@ package sample;
 
 import SodukuUtils.CoordToSquareNr;
 import SodukuUtils.NumSeen;
-import Utils.ListToArray;
+import Utils.ListArrayConverter;
 import Utils.ShrinkArray;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A class made for solving soduku.
+ * Methods may throw exception if class is not properly initialized using either SodukuSolver(int[][]) or
+ * SodukuSolver() followed by setPlayfield(int[][])
+ */
 public class SodukuSolver {
 
     private int[][] playfield = new int [9][9];
     private Boolean isInitialized = false;
 
+    private int[][] squareResult;
+    private int[][] rowResult;
+    private int[][] columnResult;
+
+
     /**
-     * Default constructor, not used, do not use
+     * Default constructor, call setPlayfield before using any other method
      */
     public SodukuSolver() {
-        throw new UnsupportedOperationException("This constructor is not implemented");
+        isInitialized = false;
     }
 
     /**
@@ -35,24 +45,29 @@ public class SodukuSolver {
         return playfield;
     }
 
+    public void setPlayfield(int[][] newPlayfield) {
+        playfield = newPlayfield;
+        isInitialized = true;
+    }
+
     /**
      * Tries to solve the set grid
      * @return true if the soduku was solved, false otherwise
      */
-    public Boolean solve() {
+    public Boolean solve() throws Exception {
         if (!isInitialized) {
             return false;
         }
 
         // Algorithm version 1
         //--------------------------
-        // ONE PASS ONLY, FOR THE MOMENT
 
-        int[][] squareResult = new int[9][];
+        squareResult = new int[9][];
         int squareCount = 0;
-        int[][] rowResult = new int[9][];
-        int[][] columnResult = new int[9][];
+        rowResult = new int[9][];
+        columnResult = new int[9][];
 
+        // Preparations
         for (int r = 0; r < 9; r+=3) {
             for (int c = 0; c < 9; c+=3, squareCount++) {
                 squareResult[squareCount] = scanSquare(r, c);
@@ -65,23 +80,56 @@ public class SodukuSolver {
             columnResult[c] = scanCol(c);
         }
 
-        for(int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                if(playfield[r][c] != 0)
-                    continue;
+        // Attempt solving
 
-                int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
-                int match = findSingleCommon(squareResult[squareNumber],
-                        rowResult[r], columnResult[c]);
-                if (match != 0) {
-                    playfield[r][c] = match;
-                    squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], match);
-                    rowResult[r] = ShrinkArray.excludeValue(rowResult[r], match);
-                    columnResult[c] = ShrinkArray.excludeValue(columnResult[c], match);
+        Boolean madeProgress;
+        do {
+            madeProgress = false;
+            for(int r = 0; r < 9; r++) {
+                for (int c = 0; c < 9; c++) {
+                    if(playfield[r][c] != 0)
+                        continue;
+
+                    int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
+                    int match = findSingleCommon(squareResult[squareNumber],
+                            rowResult[r], columnResult[c]);
+                    if (match != 0) {
+                        playfield[r][c] = match;
+                        squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], match);
+                        rowResult[r] = ShrinkArray.excludeValue(rowResult[r], match);
+                        columnResult[c] = ShrinkArray.excludeValue(columnResult[c], match);
+                        madeProgress = true;
+                    }
                 }
             }
-        }
-        return false;
+        } while (madeProgress);
+
+        return validateSolve();
+    }
+
+    private Boolean validateSolve() {
+       try{
+           for (int r = 0; r < 9; r+=3) {
+               for (int c = 0; c < 9; c += 3) {
+                   if (scanSquare(0, 0).length != 0) {
+                       return false;
+                   }
+               }
+           }
+           for(int r = 0; r <9; r++) {
+                   if (scanRow(r).length != 0) {
+                       return false;
+                   }
+           }
+           for(int c = 0; c <9; c++) {
+               if (scanCol(c).length != 0) {
+                   return false;
+               }
+           }
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+       return true;
     }
 
     /**
@@ -90,8 +138,13 @@ public class SodukuSolver {
      * @param r: the row number (0-8)
      * @param c: the column number (0-8)
      * @return a int array containing the possible numbers
+     * @throws Exception: if this instance of the class has not been initialized
      */
-    private int[] scanSquare(int r, int c) {
+    private int[] scanSquare(int r, int c) throws Exception {
+        if (!isInitialized) {
+            throw new Exception("Class not initialized, playfield not set");
+        }
+
         r = topLeftRow(r);
         c = topLeftCol(c);
         NumSeen numSeen = new NumSeen();
@@ -111,8 +164,13 @@ public class SodukuSolver {
      * Returns all number that can be placed on the given row
      * @param r: the row number (0-8)
      * @return a int array containing the possible numbers
+     * @throws Exception: if this instance of the class has not been initialized
      */
-    private int[] scanRow(int r) {
+    private int[] scanRow(int r) throws Exception {
+        if (!isInitialized) {
+            throw new Exception("Class not initialized, playfield not set");
+        }
+
         NumSeen numSeen = new NumSeen();
         for (int c = 0; c < 9; c++) {
             int num = playfield[r][c];
@@ -127,10 +185,15 @@ public class SodukuSolver {
      * Returns all number that can be placed on the given column
      * @param c: the column number (0-8)
      * @return a int array containing the possible numbers
+     * @throws Exception: if this instance of the class has not been initialized
      */
-    private int[] scanCol(int c) {
+    private int[] scanCol(int c) throws Exception {
+        if (!isInitialized) {
+            throw new Exception("Class not initialized, playfield not set");
+        }
+
         NumSeen numSeen = new NumSeen();
-        for (int r = 0; c < 9; c++) {
+        for (int r = 0; r < 9; r++) {
             int num = playfield[r][c];
             if (num != 0) {
                 numSeen.makeSeen(num);
@@ -161,7 +224,11 @@ public class SodukuSolver {
         else return 6;
     }
 
-    private int[] findCommons(int[] sqList, int[] rowList, int[] colList) {
+    private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
+        if (!isInitialized) {
+            throw new Exception("Class not initialized, playfield not set");
+        }
+
         if (sqList.length == 0 || rowList.length == 0 || colList.length == 0)
             return null; // One or more of the square, the row or the column is already solved. Return.
 
@@ -224,10 +291,15 @@ public class SodukuSolver {
         // now should sq == col && col == row ( and therefor sq == row )
         if (row.isEmpty())
             return new int[] {0};
-        return ListToArray.integerListToIntArray(row);
+        return ListArrayConverter.integerListToIntArray(row);
 
     }
-    private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) {
+
+    private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
+        if (!isInitialized) {
+            throw new Exception("Class not initialized, playfield not set");
+        }
+
         int[] result = findCommons(sqList, rowList, colList);
         if (result != null) {
             if  (result.length == 1)
@@ -236,5 +308,17 @@ public class SodukuSolver {
                 return 0;
         }
         return 0;
+    }
+
+    public int[] getUnseenForSquare(int r, int c) {
+        return squareResult[CoordToSquareNr.coordToSquarenr(r, c)];
+    }
+
+    public int[] getUnseenForRow(int r) {
+        return rowResult[r];
+    }
+
+    public int[] getUnseenForCol(int c) {
+        return rowResult[c];
     }
 }
