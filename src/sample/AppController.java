@@ -53,6 +53,7 @@ public class AppController {
         //Populate default soduku boards and enable load button
         ObservableList<String> obsList = FXCollections.observableArrayList();
         obsList.add("easy_1");
+        obsList.add("vhard_1");
         listDefaultSoduku.setItems(obsList);
         buttonDefaultSoduku.setDisable(false);
     }
@@ -65,7 +66,7 @@ public class AppController {
                 String id = tf.getId();
                 continue;
             }
-            if (tf.getText().length() != 1 || !tf.getText().matches("[0-9]")) {
+            if (tf.getText().length() > 1 || (!tf.getText().equals("") && !tf.getText().equals(" ") && !tf.getText().matches("[0-9]"))) {
                 checkResult.setText(tf.getId() + " Invalid content");
                 solve.setDisable(true);
                 return;
@@ -81,7 +82,12 @@ public class AppController {
             String id = node.getId().substring(5);
             int r = Character.getNumericValue(id.charAt(0));
             int c = Character.getNumericValue(id.charAt(1));
-            tf.setText(Integer.toString(playfield[r][c]));
+            String cellContent = Integer.toString(playfield[r][c]);
+            if (cellContent.equals("0")) {
+                tf.setText(" ");
+            } else {
+                tf.setText(cellContent);
+            }
         }
     }
 

@@ -319,6 +319,6 @@ public class SodukuSolver {
     }
 
     public int[] getUnseenForCol(int c) {
-        return rowResult[c];
+        return columnResult[c];
     }
 }
