@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class AppController {
 
     public Button buttonDefaultSoduku;
+    public Button create;
     public Button solve;
     public Button tst;
     public CheckBox checkboxDebug;
@@ -36,6 +37,8 @@ public class AppController {
 
     @FXML
     void CreatePlayfield() {
+        checkResult.setText("");
+        out.setText("");
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 String id = "cell_" + r + c;
@@ -59,19 +62,27 @@ public class AppController {
     }
 
     public void CheckCells(ActionEvent actionEvent) {
+        int[][] sodukuGrid = new int[9][9];
         checkResult.setText("");
+        out.setText("");
         for (Node node : grid11.getChildren()) {
             TextField tf = (TextField) node;
             if (tf.getText().isEmpty()) {
                 String id = tf.getId();
+                sodukuGrid[Character.getNumericValue(id.charAt(5))][Character.getNumericValue(id.charAt(6))] = 0;
                 continue;
             }
             if (tf.getText().length() > 1 || (!tf.getText().equals("") && !tf.getText().equals(" ") && !tf.getText().matches("[0-9]"))) {
                 checkResult.setText(tf.getId() + " Invalid content");
                 solve.setDisable(true);
                 return;
+            } else {
+                String id = tf.getId();
+                sodukuGrid[Character.getNumericValue(id.charAt(5))]
+                        [Character.getNumericValue(id.charAt(6))] = Character.getNumericValue(tf.getText().charAt(0));
             }
         }
+        sodukuSolver.setPlayfield(sodukuGrid);
         solve.setDisable(false);
     }
 
@@ -92,6 +103,8 @@ public class AppController {
     }
 
     public void solve(ActionEvent actionEvent) {
+        checkResult.setText("");
+        out.setText("");
         StopWatch timer = new StopWatch();
         boolean res = false;
         progressSolving.setVisible(true);
@@ -112,6 +125,9 @@ public class AppController {
         text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
+
+        tst.setDisable(false);
+        solve.setDisable(true);
     }
 
     private void showDebugData(MouseEvent mouseEvent) {
@@ -137,10 +153,13 @@ public class AppController {
     }
 
     public void loadDefaultSoduku(ActionEvent actionEvent) {
-            String defaultName = listDefaultSoduku.getSelectionModel().getSelectedItem();
-            sodukuSolver.setPlayfield(SodukuLoader.loadSoduku(defaultName));
-            updatePlayfield();
-            CheckCells(new ActionEvent());
+        checkResult.setText("");
+        out.setText("");
+        String defaultName = listDefaultSoduku.getSelectionModel().getSelectedItem();
+        sodukuSolver.setPlayfield(SodukuLoader.loadSoduku(defaultName));
+        updatePlayfield();
+        CheckCells(new ActionEvent());
+        solve.setDisable(false);
 
     }
 }
