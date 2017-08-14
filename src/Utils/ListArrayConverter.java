@@ -21,4 +21,13 @@ public class ListArrayConverter {
         }
         return obsList;
     }
+
+    public static int[] ObservableIntegerListToIntArray(ObservableList<Integer> obsList) {
+
+        int[] intArray = new int[obsList.size()];
+        for (int i = 0; i < obsList.size(); i++) {
+            intArray[i] = obsList.get(i);
+        }
+        return intArray;
+    }
 }

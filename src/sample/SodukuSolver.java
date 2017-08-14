@@ -224,7 +224,7 @@ public class SodukuSolver {
         else return 6;
     }
 
-    private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
+    public int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
         }
@@ -295,7 +295,7 @@ public class SodukuSolver {
 
     }
 
-    private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
+    public int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
         }

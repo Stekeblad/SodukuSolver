@@ -1,7 +1,6 @@
 package sample;
 
 import SodukuUtils.SodukuLoader;
-import Utils.ListArrayConverter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -15,19 +14,19 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.concurrent.TimeUnit;
 
+import static Utils.ListArrayConverter.ObservableIntegerListToIntArray;
+import static Utils.ListArrayConverter.intArrayToObservableIntegerList;
+
 
 public class AppController {
 
     public Button buttonDefaultSoduku;
     public Button create;
     public Button solve;
-    public Button tst;
     public CheckBox checkboxDebug;
     public GridPane grid11;
     public Label text_solving;
-    public ListView<Integer> listUnseenCol;
-    public ListView<Integer> listUnseenRow;
-    public ListView<Integer> listUnseenSq;
+    public ListView<Integer> listUnseen;
     public ListView<String> listDefaultSoduku;
     public ProgressIndicator progressSolving;
     public TextField checkResult;
@@ -46,12 +45,10 @@ public class AppController {
                 newField.setId(id);
                 newField.setMaxWidth(30);
                 newField.setAlignment(Pos.CENTER);
-                newField.setOnMouseClicked(this::showDebugData);
+                newField.setOnMouseClicked(this::showHints);
                 grid11.add(newField, c, r);
             }
         }
-        tst.setDisable(false);
-        solve.setDisable(true);
 
         //Populate default soduku boards and enable load button
         ObservableList<String> obsList = FXCollections.observableArrayList();
@@ -61,7 +58,7 @@ public class AppController {
         buttonDefaultSoduku.setDisable(false);
     }
 
-    public void CheckCells(ActionEvent actionEvent) {
+    private boolean CheckCells() {
         int[][] sodukuGrid = new int[9][9];
         checkResult.setText("");
         out.setText("");
@@ -74,8 +71,7 @@ public class AppController {
             }
             if (tf.getText().length() > 1 || (!tf.getText().equals("") && !tf.getText().equals(" ") && !tf.getText().matches("[0-9]"))) {
                 checkResult.setText(tf.getId() + " Invalid content");
-                solve.setDisable(true);
-                return;
+                return false;
             } else {
                 String id = tf.getId();
                 sodukuGrid[Character.getNumericValue(id.charAt(5))]
@@ -83,7 +79,7 @@ public class AppController {
             }
         }
         sodukuSolver.setPlayfield(sodukuGrid);
-        solve.setDisable(false);
+        return true;
     }
 
     private void updatePlayfield() {
@@ -95,7 +91,7 @@ public class AppController {
             int c = Character.getNumericValue(id.charAt(1));
             String cellContent = Integer.toString(playfield[r][c]);
             if (cellContent.equals("0")) {
-                tf.setText(" ");
+                tf.setText("");
             } else {
                 tf.setText(cellContent);
             }
@@ -105,6 +101,10 @@ public class AppController {
     public void solve(ActionEvent actionEvent) {
         checkResult.setText("");
         out.setText("");
+        if (! CheckCells()) {
+            return;
+        }
+
         StopWatch timer = new StopWatch();
         boolean res = false;
         progressSolving.setVisible(true);
@@ -125,12 +125,9 @@ public class AppController {
         text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
-
-        tst.setDisable(false);
-        solve.setDisable(true);
     }
 
-    private void showDebugData(MouseEvent mouseEvent) {
+    private void showHints(MouseEvent mouseEvent) {
         if (checkboxDebug.isSelected()) {
             TextField source = (TextField) mouseEvent.getSource();
 
@@ -138,18 +135,26 @@ public class AppController {
             int r = Character.getNumericValue(id.charAt(0));
             int c = Character.getNumericValue(id.charAt(1));
 
-            ObservableList<Integer> obsListSq = ListArrayConverter.intArrayToObservableIntegerList(
+            ObservableList<Integer> obsListSq = intArrayToObservableIntegerList(
                     sodukuSolver.getUnseenForSquare(r, c));
-            listUnseenSq.setItems(obsListSq);
-
-            ObservableList<Integer> obsListRow = ListArrayConverter.intArrayToObservableIntegerList(
+            ObservableList<Integer> obsListRow = intArrayToObservableIntegerList(
                     sodukuSolver.getUnseenForRow(r));
-            listUnseenRow.setItems(obsListRow);
-
-            ObservableList<Integer> obsListCol = ListArrayConverter.intArrayToObservableIntegerList(
+            ObservableList<Integer> obsListCol = intArrayToObservableIntegerList(
                     sodukuSolver.getUnseenForCol(c));
-            listUnseenCol.setItems(obsListCol);
+
+            try {
+                listUnseen.setItems(intArrayToObservableIntegerList(
+                        sodukuSolver.findCommons(ObservableIntegerListToIntArray(obsListSq),
+                        ObservableIntegerListToIntArray(obsListRow), ObservableIntegerListToIntArray(obsListCol))));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    private void onFocusLost(TextField textField) {
+
+
     }
 
     public void loadDefaultSoduku(ActionEvent actionEvent) {
@@ -158,8 +163,6 @@ public class AppController {
         String defaultName = listDefaultSoduku.getSelectionModel().getSelectedItem();
         sodukuSolver.setPlayfield(SodukuLoader.loadSoduku(defaultName));
         updatePlayfield();
-        CheckCells(new ActionEvent());
-        solve.setDisable(false);
 
     }
 }

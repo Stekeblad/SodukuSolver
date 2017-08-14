@@ -5,7 +5,7 @@ public class ShrinkArray {
      * Removes the element at index excludeIndex and returns a new array
      * @param array the array to remove a element from
      * @param excludeIndex the index of the element to remove
-     * @return
+     * @return a copy of array but with the value at excludeIndex removed
      */
     public static int[] excludeIndex(int[] array, int excludeIndex) {
         int[] newArray = new int[array.length - 1];
@@ -25,7 +25,7 @@ public class ShrinkArray {
      * values will be left at the end
      * @param array the array to remove a element from
      * @param excludeValue the value of the element to remove
-     * @return
+     * @return a copy of array but with the first occurrence of excludeValue removed
      */
     public static int[] excludeValue(int[] array, int excludeValue) {
         int[] newArray = new int[array.length - 1];
