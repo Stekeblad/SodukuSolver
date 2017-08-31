@@ -8,14 +8,11 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.concurrent.TimeUnit;
 
-import static Utils.ListArrayConverter.ObservableIntegerListToIntArray;
-import static Utils.ListArrayConverter.intArrayToObservableIntegerList;
 
 
 public class AppController {
@@ -45,7 +42,6 @@ public class AppController {
                 newField.setId(id);
                 newField.setMaxWidth(30);
                 newField.setAlignment(Pos.CENTER);
-                newField.setOnMouseClicked(this::showHints);
                 grid11.add(newField, c, r);
             }
         }
@@ -125,36 +121,6 @@ public class AppController {
         text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
-    }
-
-    private void showHints(MouseEvent mouseEvent) {
-        if (checkboxDebug.isSelected()) {
-            TextField source = (TextField) mouseEvent.getSource();
-
-            String id = source.getId().substring(5);
-            int r = Character.getNumericValue(id.charAt(0));
-            int c = Character.getNumericValue(id.charAt(1));
-
-            ObservableList<Integer> obsListSq = intArrayToObservableIntegerList(
-                    sodukuSolver.getUnseenForSquare(r, c));
-            ObservableList<Integer> obsListRow = intArrayToObservableIntegerList(
-                    sodukuSolver.getUnseenForRow(r));
-            ObservableList<Integer> obsListCol = intArrayToObservableIntegerList(
-                    sodukuSolver.getUnseenForCol(c));
-
-            try {
-                listUnseen.setItems(intArrayToObservableIntegerList(
-                        sodukuSolver.findCommons(ObservableIntegerListToIntArray(obsListSq),
-                        ObservableIntegerListToIntArray(obsListRow), ObservableIntegerListToIntArray(obsListCol))));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void onFocusLost(TextField textField) {
-
-
     }
 
     public void loadDefaultSoduku(ActionEvent actionEvent) {

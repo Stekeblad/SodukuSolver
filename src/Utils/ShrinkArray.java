@@ -20,16 +20,14 @@ public class ShrinkArray {
     }
 
     /**
-     * Removes all elements with the value excludeValue but ASSUMES ONLY ONE OCCURRENCE OF IT as the size will be
-     * one smaller then the original array. With more then one occurrence of excludeValue one or more uninitialized
-     * values will be left at the end
+     * Removes all elements with the value excludeValue from array
      * @param array the array to remove a element from
      * @param excludeValue the value of the element to remove
      * @return a copy of array but with the first occurrence of excludeValue removed
      */
     public static int[] excludeValue(int[] array, int excludeValue) {
-        int[] newArray = new int[array.length - 1];
-        for (int i = 0, j = 0; i < newArray.length; i++, j++) {
+        int[] newArray = new int[] {};
+        for (int i = 0, j = 0; j < array.length; i++, j++) {
             if (array[j] == excludeValue) {
                 i--;
                 continue;

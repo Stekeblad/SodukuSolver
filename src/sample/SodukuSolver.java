@@ -5,6 +5,7 @@ import SodukuUtils.CoordToSquareNr;
 import SodukuUtils.NumSeen;
 import Utils.ListArrayConverter;
 import Utils.ShrinkArray;
+import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,16 +60,13 @@ public class SodukuSolver {
             return false;
         }
 
-        // Algorithm version 1
-        //--------------------------
-
         squareResult = new int[9][];
-        int squareCount = 0;
         rowResult = new int[9][];
         columnResult = new int[9][];
 
         // Preparations
-        for (int r = 0; r < 9; r+=3) {
+
+        for (int r = 0, squareCount = 0; r < 9; r+=3) {
             for (int c = 0; c < 9; c+=3, squareCount++) {
                 squareResult[squareCount] = scanSquare(r, c);
             }
@@ -82,9 +80,12 @@ public class SodukuSolver {
 
         // Attempt solving
 
-        Boolean madeProgress;
+        boolean madeProgress;
         do {
             madeProgress = false;
+
+            // Algorithm 1: Places a number if it is the only one who can be in a cell
+
             for(int r = 0; r < 9; r++) {
                 for (int c = 0; c < 9; c++) {
                     if(playfield[r][c] != 0)
@@ -102,6 +103,13 @@ public class SodukuSolver {
                     }
                 }
             }
+
+            // Algorithm 2: Places a number if it can only be there
+
+            for (int i = 0; i < 9; i++) {
+                singlePossibleRow(i);
+            }
+
         } while (madeProgress);
 
         return validateSolve();
@@ -224,7 +232,8 @@ public class SodukuSolver {
         else return 6;
     }
 
-    public int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
+    // Used by Algorithm 1
+    private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
         }
@@ -295,7 +304,8 @@ public class SodukuSolver {
 
     }
 
-    public int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
+    // Used by Algorithm 1
+    private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
         }
@@ -309,6 +319,58 @@ public class SodukuSolver {
         }
         return 0;
     }
+
+    //Used by Algorithm 2
+    private List<Pair<Integer,Integer>> singlePossibleRow(int row) throws Exception {
+        int[][] possibleNumbersOnRow = new int[9][];
+        boolean[] hasOnePossibility = new boolean[9];
+        List<Pair<Integer, Integer> > answers = new ArrayList<>();
+
+        for(int i = 0; i < 9; i++) {
+            possibleNumbersOnRow[i] = findCommons(squareResult[CoordToSquareNr.coordToSquarenr(row, i)],
+                    rowResult[row], columnResult[i]);
+        }
+        for(int i = 0; i < 9; i++) {
+            hasOnePossibility[i] = true;
+        }
+
+        for(int i = 0; i < 9; i++) {
+            if( possibleNumbersOnRow[i] == null) { // if cell at [row, i] has something in it, mark the number in that cell as not interesting
+                hasOnePossibility[playfield[row][i]] = false;
+                possibleNumbersOnRow[i] = new int[] {0}; // safer to work with
+            } else {
+                for(int j = 0; j < possibleNumbersOnRow[i].length; j++) {
+                    int numToTest = possibleNumbersOnRow[i][j];
+                    if(hasOnePossibility[numToTest] && isInMultiple(possibleNumbersOnRow, numToTest)) {
+                        for(int k = 0; k < 9; k++) {
+                            possibleNumbersOnRow[k] = ShrinkArray.excludeValue(possibleNumbersOnRow[k], numToTest);
+                        }
+                        hasOnePossibility[numToTest] = false;
+                    } else if(hasOnePossibility[numToTest]) {
+                        answers.add(new Pair<>(i, numToTest));
+                    }
+                }
+            }
+        }
+        return answers;
+
+    }
+
+    private boolean isInMultiple(int[][] array, int numToTest) {
+        int timesSeen = 0;
+        for (int[] innerArray : array) {
+            for (int number : innerArray) { // skips then innerArray = null ?
+                if (number == numToTest) {
+                    if (++timesSeen > 1) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
 
     public int[] getUnseenForSquare(int r, int c) {
         return squareResult[CoordToSquareNr.coordToSquarenr(r, c)];
