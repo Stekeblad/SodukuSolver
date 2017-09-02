@@ -106,8 +106,18 @@ public class SodukuSolver {
 
             // Algorithm 2: Places a number if it can only be there
 
-            for (int i = 0; i < 9; i++) {
-                singlePossibleRow(i);
+            for (int r = 0; r < 9; r++) {
+                List<Pair<Integer, Integer> > results = singlePossibleRow(r);
+                if(!results.isEmpty()) {
+                    for (Pair<Integer, Integer> result : results) {
+                        playfield[r][result.getKey()] = result.getValue();
+                        int squareNumber = CoordToSquareNr.coordToSquarenr(r, result.getKey());
+                        squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], result.getValue());
+                        rowResult[r] = ShrinkArray.excludeValue(rowResult[r], result.getValue());
+                        columnResult[result.getKey()] = ShrinkArray.excludeValue(columnResult[result.getKey()], result.getValue());
+                        madeProgress = true;
+                    }
+                }
             }
 
         } while (madeProgress);
@@ -321,7 +331,7 @@ public class SodukuSolver {
     }
 
     //Used by Algorithm 2
-    private List<Pair<Integer,Integer>> singlePossibleRow(int row) throws Exception {
+    private List<Pair<Integer,Integer> > singlePossibleRow(int row) throws Exception {
         int[][] possibleNumbersOnRow = new int[9][];
         boolean[] hasOnePossibility = new boolean[9];
         List<Pair<Integer, Integer> > answers = new ArrayList<>();
