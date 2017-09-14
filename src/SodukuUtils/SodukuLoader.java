@@ -29,11 +29,12 @@ public class SodukuLoader {
                 board[6] = new int[]{0, 0, 0, 5, 4, 0, 9, 0, 0};
                 board[7] = new int[]{0, 0, 0, 8, 0, 0, 3, 5, 0};
                 board[8] = new int[]{0, 0, 0, 0, 9, 2, 0, 8, 0};
+                break;
 
             case "\"the most difficult\"":
                 board[0] = new int[]{8, 0, 0, 0, 0, 0, 0, 0, 0};
                 board[1] = new int[]{0, 0, 3, 6, 0, 0, 0, 0, 0};
-                board[2] = new int[]{0, 5, 0, 0, 9, 0, 2, 0, 0};
+                board[2] = new int[]{0, 7, 0, 0, 9, 0, 2, 0, 0};
                 board[3] = new int[]{0, 5, 0, 0, 0, 7, 0, 0, 0};
                 board[4] = new int[]{0, 0, 0, 0, 4, 5, 7, 0, 0};
                 board[5] = new int[]{0, 0, 0, 1, 0, 0, 0, 3, 0};

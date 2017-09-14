@@ -5,7 +5,8 @@ import SodukuUtils.CoordToSquareNr;
 import SodukuUtils.NumSeen;
 import Utils.ListArrayConverter;
 import Utils.ShrinkArray;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,17 +105,30 @@ public class SodukuSolver {
                 }
             }
 
-            // Algorithm 2: Places a number if it can only be there
+            // Algorithm 2: Places a number if it can only be there (and nowhere else in row/col/sq)
 
-            for (int r = 0; r < 9; r++) {
-                List<Pair<Integer, Integer> > results = singlePossibleRow(r);
-                if(!results.isEmpty()) {
-                    for (Pair<Integer, Integer> result : results) {
-                        playfield[r][result.getKey()] = result.getValue();
-                        int squareNumber = CoordToSquareNr.coordToSquarenr(r, result.getKey());
-                        squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], result.getValue());
-                        rowResult[r] = ShrinkArray.excludeValue(rowResult[r], result.getValue());
-                        columnResult[result.getKey()] = ShrinkArray.excludeValue(columnResult[result.getKey()], result.getValue());
+            for (int i = 0; i < 9; i++) {
+                List<Triple<Integer, Integer, Integer>> resultsSq = singlePossibleSquare(i);
+                List<Triple<Integer, Integer, Integer>> resultsRow = singlePossibleRow(i);
+                List<Triple<Integer, Integer, Integer>> resultsCol = singlePossibleCol(i);
+                List<Triple<Integer, Integer, Integer>> mergedResults = new ArrayList<>();
+
+                mergedResults.addAll(resultsSq);
+                mergedResults.removeAll(resultsRow);
+                mergedResults.addAll(resultsRow);
+                mergedResults.removeAll(resultsCol);
+                mergedResults.addAll(resultsCol);
+
+                if(!mergedResults.isEmpty()) {
+                    for (Triple<Integer, Integer, Integer> result : mergedResults) {
+                        int r = result.getLeft();
+                        int c = result.getMiddle();
+                        int answer = result.getRight();
+                        playfield[r][c] = answer;
+                        int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
+                        squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], answer);
+                        rowResult[r] = ShrinkArray.excludeValue(rowResult[r], answer);
+                        columnResult[c] = ShrinkArray.excludeValue(columnResult[c], answer);
                         madeProgress = true;
                     }
                 }
@@ -331,10 +345,53 @@ public class SodukuSolver {
     }
 
     //Used by Algorithm 2
-    private List<Pair<Integer,Integer> > singlePossibleRow(int row) throws Exception {
+    private List<Triple<Integer, Integer, Integer>> singlePossibleSquare(int sq) throws Exception {
+        int[][] possibleNumbersOnSq = new int[9][];
+        boolean[] hasOnePossibility = new boolean[10];
+        List<Triple<Integer, Integer, Integer>> answers = new ArrayList<>();
+        int rStart = CoordToSquareNr.squareAndPosToRowNr(sq, 0);
+        int cStart = CoordToSquareNr.squareAndPosToColNr(sq, 0);
+
+        for(int r = rStart, i = 0; r < rStart + 3; r++) {
+            for (int c = cStart; c < cStart + 3; c ++, i++) {
+                if (playfield[r][c] == 0) // search for possible numbers in this cell, IF IT IS EMPTY! else it is a waste of time...
+                    possibleNumbersOnSq[i] = findCommons(squareResult[sq], rowResult[r], columnResult[c]);
+            }
+        }
+        for(int i = 1; i < 10; i++) {
+            hasOnePossibility[i] = true;
+        }
+
+        for(int i = 0; i < 9; i++) {
+            if( possibleNumbersOnSq[i] == null) {
+                hasOnePossibility[playfield[CoordToSquareNr.squareAndPosToRowNr(sq, i/3)]
+                        [CoordToSquareNr.squareAndPosToColNr(sq, i%3)]] = false;
+                possibleNumbersOnSq[i] = new int[] {0}; // safer to work with
+            } else {
+                for(int j = 0; j < possibleNumbersOnSq[i].length; j++) {
+                    int numToTest = possibleNumbersOnSq[i][j];
+                    if(hasOnePossibility[numToTest] && isInMultiple(possibleNumbersOnSq, numToTest)) {
+                        for(int k = 0; k < 9; k++) {
+                            if (possibleNumbersOnSq[k] != null) {
+                                possibleNumbersOnSq[k] = ShrinkArray.excludeValue(possibleNumbersOnSq[k], numToTest);
+                            }
+                        }
+                        hasOnePossibility[numToTest] = false;
+                    } else if(hasOnePossibility[numToTest]) {
+                        answers.add(new ImmutableTriple<>(CoordToSquareNr.squareAndPosToRowNr(sq, i/3),
+                                CoordToSquareNr.squareAndPosToColNr(sq, i%3), numToTest));
+                    }
+                }
+            }
+        }
+        return answers;
+    }
+
+    //Used by Algorithm 2
+    private List<Triple<Integer, Integer, Integer>> singlePossibleRow(int row) throws Exception {
         int[][] possibleNumbersOnRow = new int[9][];
         boolean[] hasOnePossibility = new boolean[10];
-        List<Pair<Integer, Integer> > answers = new ArrayList<>();
+        List<Triple<Integer, Integer, Integer>> answers = new ArrayList<>();
 
         for(int i = 0; i < 9; i++) {
             if(playfield[row][i] == 0) // search for possible numbers in this cell, IF IT IS EMPTY! else it is a waste of time...
@@ -346,7 +403,7 @@ public class SodukuSolver {
         }
 
         for(int i = 0; i < 9; i++) {
-            if( possibleNumbersOnRow[i] == null) { // if cell at [row, i] has something in it, mark the number in that cell as not interesting
+            if( possibleNumbersOnRow[i] == null) {
                 hasOnePossibility[playfield[row][i]] = false;
                 possibleNumbersOnRow[i] = new int[] {0}; // safer to work with
             } else {
@@ -360,13 +417,50 @@ public class SodukuSolver {
                         }
                         hasOnePossibility[numToTest] = false;
                     } else if(hasOnePossibility[numToTest]) {
-                        answers.add(new Pair<>(i, numToTest));
+                        answers.add(new ImmutableTriple<>(row, i, numToTest));
                     }
                 }
             }
         }
         return answers;
+    }
 
+    //Used by Algorithm 2
+    private List<Triple<Integer, Integer, Integer>> singlePossibleCol(int col) throws Exception {
+        int[][] possibleNumbersOnCol = new int[9][];
+        boolean[] hasOnePossibility = new boolean[10];
+        List<Triple<Integer, Integer, Integer>> answers = new ArrayList<>();
+
+        for(int i = 0; i < 9; i++) {
+            if(playfield[i][col] == 0) // search for possible numbers in this cell, IF IT IS EMPTY! else it is a waste of time...
+                possibleNumbersOnCol[i] = findCommons(squareResult[CoordToSquareNr.coordToSquarenr(i, col)],
+                        rowResult[i], columnResult[col]);
+        }
+        for(int i = 1; i < 10; i++) {
+            hasOnePossibility[i] = true;
+        }
+
+        for(int i = 0; i < 9; i++) {
+            if( possibleNumbersOnCol[i] == null) {
+                hasOnePossibility[playfield[i][col]] = false;
+                possibleNumbersOnCol[i] = new int[] {0}; // safer to work with
+            } else {
+                for(int j = 0; j < possibleNumbersOnCol[i].length; j++) {
+                    int numToTest = possibleNumbersOnCol[i][j];
+                    if(hasOnePossibility[numToTest] && isInMultiple(possibleNumbersOnCol, numToTest)) {
+                        for(int k = 0; k < 9; k++) {
+                            if (possibleNumbersOnCol[k] != null) {
+                                possibleNumbersOnCol[k] = ShrinkArray.excludeValue(possibleNumbersOnCol[k], numToTest);
+                            }
+                        }
+                        hasOnePossibility[numToTest] = false;
+                    } else if(hasOnePossibility[numToTest]) {
+                        answers.add(new ImmutableTriple<>(i, col, numToTest));
+                    }
+                }
+            }
+        }
+        return answers;
     }
 
     private boolean isInMultiple(int[][] array, int numToTest) {
