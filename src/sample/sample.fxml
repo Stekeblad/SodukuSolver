@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="792.0" prefWidth="958.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.AppController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="874.0" prefWidth="658.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.AppController">
     <children>
         <Rectangle arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="600.0" layoutX="30.0" layoutY="30.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="4.0" width="600.0" />
         <Line endY="600.0" layoutX="230.0" layoutY="30.0" />
@@ -37,21 +37,13 @@
 
             </children>
         </GridPane>
-        <TextField fx:id="out" layoutX="476.0" layoutY="676.0" prefHeight="25.0" prefWidth="182.0" />
-        <Button fx:id="create" layoutX="188.0" layoutY="664.0" mnemonicParsing="false" onAction="#CreatePlayfield" text="Start/Restart" />
-      <TextField fx:id="checkResult" layoutX="476.0" layoutY="645.0" prefHeight="25.0" prefWidth="182.0" />
-      <Button fx:id="solve" layoutX="410.0" layoutY="676.0" mnemonicParsing="false" onAction="#solve" text="Solve" />
-      <ProgressIndicator fx:id="progressSolving" layoutX="294.0" layoutY="641.0" prefHeight="95.0" prefWidth="95.0" visible="false" />
-      <Label fx:id="text_solving" layoutX="294.0" layoutY="744.0" prefHeight="17.0" prefWidth="85.0" text="Solving..." textAlignment="CENTER" visible="false" />
-      <Pane layoutX="642.0" layoutY="35.0" prefHeight="376.0" prefWidth="303.0">
-         <children>
-            <ListView fx:id="listUnseen" layoutX="14.0" layoutY="55.0" prefHeight="200.0" prefWidth="95.0" />
-            <Label layoutX="14.0" layoutY="14.0" prefHeight="39.0" prefWidth="93.0" text="Allowed values in selected cell" wrapText="true" />
-            <CheckBox fx:id="checkboxDebug" layoutX="14.0" layoutY="263.0" mnemonicParsing="false" text="Enable hint" />
-            <Label layoutX="122.0" layoutY="55.0" prefHeight="72.0" prefWidth="167.0" text="DOES NOT UPDATE AFTER MANUAL EDITS, ONLY AFTER SOLVE ATTEMPTS" wrapText="true" />
-         </children>
-      </Pane>
-      <Button fx:id="buttonDefaultSoduku" disable="true" layoutX="794.0" layoutY="512.0" mnemonicParsing="false" onAction="#loadDefaultSoduku" text="Load a Default" />
-      <ListView fx:id="listDefaultSoduku" layoutX="727.0" layoutY="545.0" prefHeight="200.0" prefWidth="200.0" />
+        <TextField fx:id="out" editable="false" layoutX="50.0" layoutY="817.0" prefHeight="25.0" prefWidth="182.0" />
+        <Button fx:id="create" layoutX="30.0" layoutY="668.0" mnemonicParsing="false" onAction="#CreatePlayfield" text="Start/Restart" />
+      <TextField fx:id="checkResult" editable="false" layoutX="50.0" layoutY="786.0" prefHeight="25.0" prefWidth="182.0" />
+      <Button fx:id="solve" layoutX="49.0" layoutY="740.0" mnemonicParsing="false" onAction="#solve" text="Solve" />
+      <ProgressIndicator fx:id="progressSolving" layoutX="136.0" layoutY="645.0" prefHeight="95.0" prefWidth="95.0" visible="false" />
+      <Button fx:id="buttonDefaultSoduku" disable="true" layoutX="485.0" layoutY="668.0" mnemonicParsing="false" onAction="#loadDefaultSoduku" text="Load a Default" />
+      <ListView fx:id="listDefaultSoduku" layoutX="278.0" layoutY="653.0" prefHeight="200.0" prefWidth="200.0" />
+      <Label fx:id="text_solving" layoutX="151.0" layoutY="740.0" prefHeight="25.0" prefWidth="66.0" text="Solving..." textAlignment="CENTER" visible="false" />
     </children>
 </Pane>

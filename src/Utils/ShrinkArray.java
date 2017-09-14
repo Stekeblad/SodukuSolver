@@ -1,5 +1,8 @@
 package Utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ShrinkArray {
     /**
      * Removes the element at index excludeIndex and returns a new array
@@ -21,19 +24,19 @@ public class ShrinkArray {
 
     /**
      * Removes all elements with the value excludeValue from array
-     * @param array the array to remove a element from
-     * @param excludeValue the value of the element to remove
-     * @return a copy of array but with the first occurrence of excludeValue removed
+     * @param array the array to remove element(s) from
+     * @param excludeValue the value of the element(s) to remove
+     * @return a copy of array but with all occurrences of excludeValue removed
      */
     public static int[] excludeValue(int[] array, int excludeValue) {
-        int[] newArray = new int[] {};
+        List<Integer> newArray = new ArrayList<>();
         for (int i = 0, j = 0; j < array.length; i++, j++) {
             if (array[j] == excludeValue) {
                 i--;
                 continue;
             }
-            newArray[i] = array[j];
+            newArray.add(i, array[j]);
         }
-        return newArray;
+        return ListArrayConverter.integerListToIntArray(newArray);
     }
 }

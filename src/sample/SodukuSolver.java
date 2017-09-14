@@ -42,11 +42,11 @@ public class SodukuSolver {
         isInitialized = true;
     }
 
-    public int[][] getPlayfield() {
+     int[][] getPlayfield() {
         return playfield;
     }
 
-    public void setPlayfield(int[][] newPlayfield) {
+     void setPlayfield(int[][] newPlayfield) {
         playfield = newPlayfield;
         isInitialized = true;
     }
@@ -55,7 +55,7 @@ public class SodukuSolver {
      * Tries to solve the set grid
      * @return true if the soduku was solved, false otherwise
      */
-    public Boolean solve() throws Exception {
+    Boolean solve() throws Exception {
         if (!isInitialized) {
             return false;
         }
@@ -242,7 +242,7 @@ public class SodukuSolver {
         else return 6;
     }
 
-    // Used by Algorithm 1
+    // Used by Algorithm 1 & 2
     private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
@@ -333,14 +333,15 @@ public class SodukuSolver {
     //Used by Algorithm 2
     private List<Pair<Integer,Integer> > singlePossibleRow(int row) throws Exception {
         int[][] possibleNumbersOnRow = new int[9][];
-        boolean[] hasOnePossibility = new boolean[9];
+        boolean[] hasOnePossibility = new boolean[10];
         List<Pair<Integer, Integer> > answers = new ArrayList<>();
 
         for(int i = 0; i < 9; i++) {
+            if(playfield[row][i] == 0) // search for possible numbers in this cell, IF IT IS EMPTY! else it is a waste of time...
             possibleNumbersOnRow[i] = findCommons(squareResult[CoordToSquareNr.coordToSquarenr(row, i)],
                     rowResult[row], columnResult[i]);
         }
-        for(int i = 0; i < 9; i++) {
+        for(int i = 1; i < 10; i++) {
             hasOnePossibility[i] = true;
         }
 
@@ -353,7 +354,9 @@ public class SodukuSolver {
                     int numToTest = possibleNumbersOnRow[i][j];
                     if(hasOnePossibility[numToTest] && isInMultiple(possibleNumbersOnRow, numToTest)) {
                         for(int k = 0; k < 9; k++) {
-                            possibleNumbersOnRow[k] = ShrinkArray.excludeValue(possibleNumbersOnRow[k], numToTest);
+                            if (possibleNumbersOnRow[k] != null) {
+                                possibleNumbersOnRow[k] = ShrinkArray.excludeValue(possibleNumbersOnRow[k], numToTest);
+                            }
                         }
                         hasOnePossibility[numToTest] = false;
                     } else if(hasOnePossibility[numToTest]) {
@@ -369,28 +372,16 @@ public class SodukuSolver {
     private boolean isInMultiple(int[][] array, int numToTest) {
         int timesSeen = 0;
         for (int[] innerArray : array) {
-            for (int number : innerArray) { // skips then innerArray = null ?
-                if (number == numToTest) {
-                    if (++timesSeen > 1) {
-                        return true;
+            if (innerArray != null) {
+                for (int number : innerArray) { // skips then innerArray = null ?
+                    if (number == numToTest) {
+                        if (++timesSeen > 1) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         return false;
-    }
-
-
-
-    public int[] getUnseenForSquare(int r, int c) {
-        return squareResult[CoordToSquareNr.coordToSquarenr(r, c)];
-    }
-
-    public int[] getUnseenForRow(int r) {
-        return rowResult[r];
-    }
-
-    public int[] getUnseenForCol(int c) {
-        return columnResult[c];
     }
 }

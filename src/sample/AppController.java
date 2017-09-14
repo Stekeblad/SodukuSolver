@@ -20,10 +20,8 @@ public class AppController {
     public Button buttonDefaultSoduku;
     public Button create;
     public Button solve;
-    public CheckBox checkboxDebug;
     public GridPane grid11;
     public Label text_solving;
-    public ListView<Integer> listUnseen;
     public ListView<String> listDefaultSoduku;
     public ProgressIndicator progressSolving;
     public TextField checkResult;
@@ -46,10 +44,13 @@ public class AppController {
             }
         }
 
-        //Populate default soduku boards and enable load button
+        // Populate default soduku boards and enable load button
+        // This is a bad solution, I attempted using files but gave up.
+        // Only using this for testing for now
         ObservableList<String> obsList = FXCollections.observableArrayList();
         obsList.add("easy_1");
         obsList.add("vhard_1");
+        obsList.add("\"the most difficult\"");
         listDefaultSoduku.setItems(obsList);
         buttonDefaultSoduku.setDisable(false);
     }
@@ -98,6 +99,7 @@ public class AppController {
         checkResult.setText("");
         out.setText("");
         if (! CheckCells()) {
+            actionEvent.consume();
             return;
         }
 
@@ -121,6 +123,7 @@ public class AppController {
         text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
+        actionEvent.consume();
     }
 
     public void loadDefaultSoduku(ActionEvent actionEvent) {
@@ -129,6 +132,6 @@ public class AppController {
         String defaultName = listDefaultSoduku.getSelectionModel().getSelectedItem();
         sodukuSolver.setPlayfield(SodukuLoader.loadSoduku(defaultName));
         updatePlayfield();
-
+        actionEvent.consume();
     }
 }
