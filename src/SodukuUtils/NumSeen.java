@@ -15,8 +15,8 @@ public class NumSeen {
      * Constructor
      */
     public NumSeen() {
-        seen = new ArrayList<Integer>();
-        unseen = new ArrayList<Integer>();
+        seen = new ArrayList<>();
+        unseen = new ArrayList<>();
         for (int i = 1; i < 10; i++)
             unseen.add(i);
     }
@@ -51,16 +51,18 @@ public class NumSeen {
      */
     public void makeUnseen(Integer i) {
         seen.remove(i);
-        unseen.add(i);
+        if( !unseen.contains(i))
+            unseen.add(i);
     }
 
     /**
      * Flags all numbers between 1 and 9 as unseen and emties the seen list
      */
     public void makeAllUnseen() {
+        seen.clear();
+        unseen.clear();
         for (int i = 1; i < 10; i++)
             unseen.add(i);
-        seen.clear();
     }
 
     /**

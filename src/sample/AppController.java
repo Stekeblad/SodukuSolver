@@ -1,5 +1,6 @@
 package sample;
 
+import SodukuUtils.CoordToSquareNr;
 import SodukuUtils.SodukuLoader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,7 +13,7 @@ import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.concurrent.TimeUnit;
-
+import java.util.logging.Logger;
 
 
 public class AppController {
@@ -28,6 +29,7 @@ public class AppController {
     public TextField out;
 
     private SodukuSolver sodukuSolver = new SodukuSolver();
+    private Logger logger = Logger.getLogger("Soduku.Log");
 
     @FXML
     void CreatePlayfield() {
@@ -59,20 +61,37 @@ public class AppController {
         int[][] sodukuGrid = new int[9][9];
         checkResult.setText("");
         out.setText("");
-        for (Node node : grid11.getChildren()) {
-            TextField tf = (TextField) node;
-            if (tf.getText().isEmpty()) {
-                String id = tf.getId();
-                sodukuGrid[Character.getNumericValue(id.charAt(5))][Character.getNumericValue(id.charAt(6))] = 0;
-                continue;
-            }
-            if (tf.getText().length() > 1 || (!tf.getText().equals("") && !tf.getText().equals(" ") && !tf.getText().matches("[0-9]"))) {
-                checkResult.setText(tf.getId() + " Invalid content");
-                return false;
-            } else {
-                String id = tf.getId();
-                sodukuGrid[Character.getNumericValue(id.charAt(5))]
-                        [Character.getNumericValue(id.charAt(6))] = Character.getNumericValue(tf.getText().charAt(0));
+        boolean seenInRow[][] = new boolean[9][10];
+        boolean seenInCol[][] = new boolean[9][10];
+        boolean seenInSq[][] = new boolean[9][10];
+
+        // First I iterated over all cells with a for-each loop but after adding checks if a number already is in a
+        // row/column/square It broke and iterated over elements more then once.
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                String id = "cell_" + row + col;
+                TextField tf = (TextField) grid11.lookup("#" + id);
+                
+                if (tf.getText().isEmpty()) {
+                    sodukuGrid[row][col] = 0;
+                    continue;
+                }
+                if (tf.getText().length() > 1 || (!tf.getText().equals("") && !tf.getText().equals(" ") && !tf.getText().matches("[0-9]"))) {
+                    checkResult.setText(id + " Invalid content");
+                    return false;
+                } else {
+                    int number = Character.getNumericValue(tf.getText().charAt(0));
+                    int sq = CoordToSquareNr.coordToSquarenr(row, col);
+                    if (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number]) {
+                        checkResult.setText(id + " the number " + number + " already seen in this row, column or square");
+                        return false;
+                    }
+
+                    seenInCol[col][number] = true;
+                    seenInRow[row][number] = true;
+                    seenInSq[sq][number] = true;
+                    sodukuGrid[row][col] = number;
+                }
             }
         }
         sodukuSolver.setPlayfield(sodukuGrid);
