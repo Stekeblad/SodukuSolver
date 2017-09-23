@@ -35,6 +35,7 @@ public class AppController {
     void CreatePlayfield() {
         checkResult.setText("");
         out.setText("");
+        int[][] emptyPlayfield = new int[9][9];
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
                 String id = "cell_" + r + c;
@@ -43,8 +44,10 @@ public class AppController {
                 newField.setMaxWidth(30);
                 newField.setAlignment(Pos.CENTER);
                 grid11.add(newField, c, r);
+                emptyPlayfield[r][c] = 0;
             }
         }
+        sodukuSolver.setPlayfield(emptyPlayfield);
 
         // Populate default soduku boards and enable load button
         // This is a bad solution, I attempted using files but gave up.
@@ -55,6 +58,7 @@ public class AppController {
         obsList.add("\"the most difficult\"");
         listDefaultSoduku.setItems(obsList);
         buttonDefaultSoduku.setDisable(false);
+        solve.setDisable(false);
     }
 
     private boolean CheckCells() {
