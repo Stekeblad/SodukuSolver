@@ -71,7 +71,7 @@ public class AppController {
             for (int col = 0; col < 9; col++) {
                 String id = "cell_" + row + col;
                 TextField tf = (TextField) grid11.lookup("#" + id);
-                
+
                 if (tf.getText().isEmpty()) {
                     sodukuGrid[row][col] = 0;
                     continue;
