@@ -1,4 +1,4 @@
-package SodukuUtils;
+package main.java.SodukuUtils;
 
 import java.util.ArrayList;
 import java.util.List;

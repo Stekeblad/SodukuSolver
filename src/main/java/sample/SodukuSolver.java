@@ -1,10 +1,10 @@
-package sample;
+package main.java.sample;
 
 
-import SodukuUtils.CoordToSquareNr;
-import SodukuUtils.NumSeen;
-import Utils.ListArrayConverter;
-import Utils.ShrinkArray;
+import main.java.SodukuUtils.CoordToSquareNr;
+import main.java.SodukuUtils.NumSeen;
+import main.java.Utils.ListArrayConverter;
+import main.java.Utils.ShrinkArray;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 

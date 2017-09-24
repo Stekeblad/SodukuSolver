@@ -1,4 +1,4 @@
-package SodukuUtils;
+package main.java.SodukuUtils;
 
 // Update in AppController::CreatePlayfield then adding/removing saves
 
