@@ -1,4 +1,4 @@
-package main.java.sample;
+package main.java.SodukuSolver;
 
 
 import main.java.SodukuUtils.CoordToSquareNr;
@@ -153,11 +153,11 @@ public class SodukuSolver {
     }
 
     /**
-     * Returns all numbers that can be placed in the given square
+     * Returns all numbers that is missing in the given square
      *
      * @param r: the row number (0-8)
      * @param c: the column number (0-8)
-     * @return a int array containing the possible numbers
+     * @return a int array containing the missing numbers
      * @throws Exception: if this instance of the class has not been initialized
      */
     private int[] scanSquare(int r, int c) throws Exception {
@@ -181,10 +181,10 @@ public class SodukuSolver {
     }
 
     /**
-     * Returns all number that can be placed on the given row
+     * Returns all number that can is missing on the given row
      *
      * @param r: the row number (0-8)
-     * @return a int array containing the possible numbers
+     * @return a int array containing the missing numbers
      * @throws Exception: if this instance of the class has not been initialized
      */
     private int[] scanRow(int r) throws Exception {
@@ -203,10 +203,10 @@ public class SodukuSolver {
     }
 
     /**
-     * Returns all number that can be placed on the given column
+     * Returns all number that can is missing on the given column
      *
      * @param c: the column number (0-8)
-     * @return a int array containing the possible numbers
+     * @return a int array containing the missing numbers
      * @throws Exception: if this instance of the class has not been initialized
      */
     private int[] scanCol(int c) throws Exception {
@@ -225,7 +225,8 @@ public class SodukuSolver {
     }
 
     /**
-     * input 0-2 returns 0, 3-5 returns 3 and 6-8 returns 6
+     * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
+     * Expected input is between 0 and 8
      *
      * @param r: a row number
      * @return a row number
@@ -237,7 +238,8 @@ public class SodukuSolver {
     }
 
     /**
-     * input 0-2 returns 0, 3-5 returns 3 and 6-8 returns 6
+     * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
+     * Expected input is between 0 and 8
      *
      * @param c: a column number
      * @return a column number
@@ -253,10 +255,11 @@ public class SodukuSolver {
     /**
      * Returns a int array of numbers that appears in all three given int arrays
      *
-     * @param sqList  squareResult[?]
-     * @param rowList rowResult[?]
-     * @param colList columnResult[?]
-     * @return a int array containing all numbers that appear in all three given arrays
+     * @param sqList  squareResult[int]
+     * @param rowList rowResult[int]
+     * @param colList columnResult[int]
+     * @return a int array containing all numbers that appear in all three given arrays, if the returned array only
+     * contains a zero it means there are no common numbers.
      * @throws Exception if this instance of the class has not been initialized
      */
     private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
@@ -302,7 +305,7 @@ public class SodukuSolver {
             col.remove(--colLen);
         }
 
-        // row and col are now identical, hopefully. Now to Sq as well
+        // row and col are now identical. Now to Sq as well
         x = 0;
         int sqLen = sq.size();
 
@@ -323,7 +326,7 @@ public class SodukuSolver {
         while (rowLen < sqLen) {
             sq.remove(--sqLen);
         }
-        // now should sq == col && col == row ( and therefor sq == row )
+        // now is sq == col && col == row ( and therefor sq == row )
         if (row.isEmpty())
             return new int[]{0};
         return ListArrayConverter.integerListToIntArray(row);
@@ -336,10 +339,10 @@ public class SodukuSolver {
      * Calls findCommons() and returns 0 if more than one number appeared in all three given int arrays
      * or the only number that appeared in all three arrays
      *
-     * @param sqList  squareResult[?]
-     * @param rowList rowResult[?]
-     * @param colList columnResult[?]
-     * @return Returns 0 if more than one number appeared in all three given int arrays
+     * @param sqList  squareResult[int]
+     * @param rowList rowResult[int]
+     * @param colList columnResult[int]
+     * @return Returns 0 if more than one or no number appeared in all three given int arrays
      * or the only number that appeared in all three arrays
      * @throws Exception if this instance of the class has not been initialized
      */
@@ -350,10 +353,9 @@ public class SodukuSolver {
 
         int[] result = findCommons(sqList, rowList, colList);
         if (result != null) {
-            if (result.length == 1)
+            if (result.length == 1) {
                 return result[0];
-            else
-                return 0;
+            }
         }
         return 0;
     }

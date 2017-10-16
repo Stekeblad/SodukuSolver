@@ -1,4 +1,4 @@
-package main.java.sample;
+package main.java.SodukuSolver;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,8 +13,6 @@ import main.java.SodukuUtils.SodukuLoader;
 import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
 
 public class AppController {
 
@@ -29,7 +27,6 @@ public class AppController {
     public TextField out;
 
     private SodukuSolver sodukuSolver = new SodukuSolver();
-    private Logger logger = Logger.getLogger("Soduku.Log");
     private boolean isBoardCreated = false;
 
     @FXML
@@ -49,8 +46,8 @@ public class AppController {
                 }
             }
             // Populate default soduku boards and enable load button
-            // This is a bad solution, I attempted using files but gave up.
-            // Only using this for testing for now
+            // This is a bad solution but it is used for testing and not for user save/load
+            // May change in the future
             ObservableList<String> obsList = FXCollections.observableArrayList();
             obsList.add("easy_1");
             obsList.add("vhard_1");
@@ -65,10 +62,9 @@ public class AppController {
                 }
             }
         }
-
         buttonDefaultSoduku.setDisable(false);
         solve.setDisable(false);
-        isBoardCreated  =true;
+        isBoardCreated = true;
     }
 
     private boolean CheckCells() {

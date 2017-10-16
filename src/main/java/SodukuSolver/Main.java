@@ -1,4 +1,4 @@
-package main.java.sample;
+package main.java.SodukuSolver;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
