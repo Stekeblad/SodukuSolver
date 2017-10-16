@@ -96,7 +96,7 @@ public class AppController {
                 } else {
                     int number = Character.getNumericValue(tf.getText().charAt(0));
                     int sq = CoordToSquareNr.coordToSquarenr(row, col);
-                    if (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number]) {
+                    if(number != 0 && (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number])) {
                         checkResult.setText(id + " the number " + number + " already seen in this row, column or square");
                         return false;
                     }
