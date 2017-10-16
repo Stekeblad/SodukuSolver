@@ -397,7 +397,9 @@ public class SodukuSolver {
         //Row
         for (int r = 0; r < 9; r++) {
             int[][] rowPossible = new int[9][];
-            System.arraycopy(everythingPossible[r], 0, rowPossible, 0, 9);
+            for (int c = 0; c < 9; c++) { // not changing to arrayCopy because I think it will make it more difficult to follow then the very similar line in the "//Column" block cant be changed to arrayCopy
+                rowPossible[c] = everythingPossible[r][c];
+            }
             for (int i = 1; i < 10; i++) {
                 int position = singlePossibleFinder(rowPossible, i);
                 if (position > -1) {
