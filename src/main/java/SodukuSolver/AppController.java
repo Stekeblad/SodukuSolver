@@ -10,7 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import main.java.SodukuUtils.CoordToSquareNr;
+import main.java.SodukuUtils.SodukuCoordUtils;
 import main.java.SodukuUtils.SodukuLoader;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -91,7 +91,7 @@ public class AppController {
                     return false;
                 } else {
                     int number = Character.getNumericValue(tf.getText().charAt(0));
-                    int sq = CoordToSquareNr.coordToSquarenr(row, col);
+                    int sq = SodukuCoordUtils.coordToSquareNr(row, col);
                     if(number != 0 && (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number])) {
                         checkResult.setText(id + " the number " + number + " already seen in this row, column or square");
                         return false;

@@ -1,9 +1,8 @@
 package main.java.SodukuSolver;
 
-import main.java.SodukuUtils.CoordToSquareNr;
 import main.java.SodukuUtils.NumSeen;
-import main.java.Utils.ListArrayConverter;
-import main.java.Utils.ShrinkArray;
+import main.java.SodukuUtils.SodukuCoordUtils;
+import main.java.Utils.ListAndArrayUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -83,7 +82,7 @@ public class SodukuSolver {
                     everythingPossible[r][c] = new int[]{0};
                     continue;
                 }
-                everythingPossible[r][c] = findCommons(sqResult[CoordToSquareNr.coordToSquarenr(r, c)],
+                everythingPossible[r][c] = findCommons(sqResult[SodukuCoordUtils.coordToSquareNr(r, c)],
                         rowResult[r], colResult[c]);
             }
         }
@@ -126,7 +125,9 @@ public class SodukuSolver {
 
             // Algorithm 3: Locked candidates ("possibilities" with my naming choice) http://www.angusj.com/sudoku/hints.php
             // Planned but not yet implemented
-
+            if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
+                madeProgress = true;
+            }
 
         } while (madeProgress);
 
@@ -137,7 +138,7 @@ public class SodukuSolver {
         try {
             for (int r = 0; r < 9; r += 3) {
                 for (int c = 0; c < 9; c += 3) {
-                    if (scanSquare(0, 0).length != 0) {
+                    if (scanSquare(r, c).length != 0) {
                         return false;
                     }
                 }
@@ -171,8 +172,8 @@ public class SodukuSolver {
             throw new Exception("Class not initialized, playfield not set");
         }
 
-        r = topLeftRow(r);
-        c = topLeftCol(c);
+        r = SodukuCoordUtils.topLeftRow(r);
+        c = SodukuCoordUtils.topLeftCol(c);
         NumSeen numSeen = new NumSeen();
 
         for (int i = 0; i < 3; i++) {
@@ -228,32 +229,6 @@ public class SodukuSolver {
             }
         }
         return numSeen.getUnseen();
-    }
-
-    /**
-     * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
-     * Expected input is between 0 and 8
-     *
-     * @param r: a row number
-     * @return a row number
-     */
-    private int topLeftRow(int r) {
-        if (r < 3) return 0;
-        if (r < 6) return 3;
-        else return 6;
-    }
-
-    /**
-     * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
-     * Expected input is between 0 and 8
-     *
-     * @param c: a column number
-     * @return a column number
-     */
-    private int topLeftCol(int c) {
-        if (c < 3) return 0;
-        if (c < 6) return 3;
-        else return 6;
     }
 
     /**
@@ -333,7 +308,7 @@ public class SodukuSolver {
         // now is sq == col && col == row ( and therefor sq == row )
         if (row.isEmpty())
             return new int[]{0};
-        return ListArrayConverter.integerListToIntArray(row);
+        return ListAndArrayUtils.integerListToIntArray(row);
 
     }
 
@@ -345,7 +320,7 @@ public class SodukuSolver {
      * @param value the number to remove
      */
     private void removePossibilityCell(int r, int c, int value) {
-        everythingPossible[r][c] = ShrinkArray.excludeValue(everythingPossible[r][c], value);
+        everythingPossible[r][c] = ListAndArrayUtils.excludeValue(everythingPossible[r][c], value);
     }
 
     /**
@@ -361,18 +336,32 @@ public class SodukuSolver {
      */
     private void removePossibilities(int r, int c, int value) {
         for (int i = 0; i < 9; i++) { // value can no longer be placed in row r
-            everythingPossible[r][i] = ShrinkArray.excludeValue(everythingPossible[r][i], value);
+            everythingPossible[r][i] = ListAndArrayUtils.excludeValue(everythingPossible[r][i], value);
         }
         for (int i = 0; i < 9; i++) { // value can no longer be placed in column c
-            everythingPossible[i][c] = ShrinkArray.excludeValue(everythingPossible[i][c], value);
+            everythingPossible[i][c] = ListAndArrayUtils.excludeValue(everythingPossible[i][c], value);
         }
-        int row = topLeftRow(r);
-        int col = topLeftCol(c);
+        int row = SodukuCoordUtils.topLeftRow(r);
+        int col = SodukuCoordUtils.topLeftCol(c);
         for (int i = 0; i < 9; i++) { // value can no longer be placed in the square of cell [r, c]
-            everythingPossible[row + i / 3][col + i % 3] = ShrinkArray.excludeValue(
+            everythingPossible[row + i / 3][col + i % 3] = ListAndArrayUtils.excludeValue(
                     everythingPossible[row + i / 3][col + i % 3], value);
         }
         everythingPossible[r][c] = new int[]{}; // Cell now filled, no new numbers can be placed in it
+    }
+
+    private int[][][] getSquaresPossibilitiesArray() {
+        int[][][] arraySquares = new int[9][9][];
+        for (int sr = 0; sr < 3; sr++) { //square row
+            for (int sc = 0; sc < 3; sc++) { // square column
+                for (int r = sr * 3, i = 0; r < sr * 3 + 3; r++) { // row in square
+                    arraySquares[sr * 3 + sc][i++] = everythingPossible[r][sc * 3];
+                    arraySquares[sr * 3 + sc][i++] = everythingPossible[r][sc * 3 + 1];
+                    arraySquares[sr * 3 + sc][i++] = everythingPossible[r][sc * 3 + 2];
+                }
+            }
+        }
+        return arraySquares;
     }
 
     /**
@@ -396,22 +385,15 @@ public class SodukuSolver {
         ArrayList<Triple<Integer, Integer, Integer>> answers = new ArrayList<>();
 
         //Square
-        for (int sr = 0; sr < 3; sr++) { //square row
-            for (int sc = 0; sc < 3; sc++) { // square column
-                int[][] squarePossible = new int[9][];
-                for (int r = sr * 3, i = 0; r < sr * 3 + 3; r++) { // row in square
-                    squarePossible[i++] = everythingPossible[r][sc * 3];
-                    squarePossible[i++] = everythingPossible[r][sc * 3 + 1];
-                    squarePossible[i++] = everythingPossible[r][sc * 3 + 2];
-                }
-                for (int i = 1; i < 10; i++) {
-                    int position = singlePossibleFinder(squarePossible, i);
-                    if (position > -1) {
-                        int row = sr * 3 + position / 3;
-                        int col = sc * 3 + position % 3;
-                        answers.add(new ImmutableTriple<>(row, col, i));
-                        removePossibilities(row, col, i);
-                    }
+        int[][][] squareArray = getSquaresPossibilitiesArray();
+        for (int sq = 0; sq < 9; sq++) {
+            for (int i = 1; i < 10; i++) {
+                int position = ListAndArrayUtils.singlePossibleFinder(squareArray[sq], i);
+                if (position > -1) {
+                    int row = SodukuCoordUtils.squareNrAndPosToRow(sq, position);
+                    int col = SodukuCoordUtils.squareNrAndPosToCol(sq, position);
+                    answers.add(new ImmutableTriple<>(row, col, i));
+                    removePossibilities(row, col, i);
                 }
             }
         }
@@ -423,7 +405,7 @@ public class SodukuSolver {
                 rowPossible[c] = everythingPossible[r][c];
             }
             for (int i = 1; i < 10; i++) {
-                int position = singlePossibleFinder(rowPossible, i);
+                int position = ListAndArrayUtils.singlePossibleFinder(rowPossible, i);
                 if (position > -1) {
                     answers.add(new ImmutableTriple<>(r, position, i));
                     removePossibilities(r, position, i);
@@ -438,7 +420,7 @@ public class SodukuSolver {
                 columnPossible[r] = everythingPossible[r][c];
             }
             for (int i = 1; i < 10; i++) {
-                int position = singlePossibleFinder(columnPossible, i);
+                int position = ListAndArrayUtils.singlePossibleFinder(columnPossible, i);
                 if (position > -1) {
                     answers.add(new ImmutableTriple<>(position, c, i));
                     removePossibilities(position, c, i);
@@ -448,51 +430,114 @@ public class SodukuSolver {
         return answers;
     }
 
-    /**
-     * Used by singlePossible to minimize repetitive code.
-     * Searches through a two-dimensional int array after a number and if the number only appears in one of the sub-arrays
-     * the index of that array is returned, else -1 is returned.
-     *
-     * @param data two-dimensional int array to analyse
-     * @param i number to find single occurrence of
-     * @return a integer >= -1 and <= 8, the index of the only inner array that contains i or -1 if i occurs in no or more than one array.
-     */
-    private int singlePossibleFinder(int[][] data, int i) {
-        if (!isInMultiple(data, i)) {
+    private boolean lockedPossibilities() {
+        // type 1: A number is only possible to place in a single row or a single column inside a square
+        // Then all squares on that row/column can have that number removed from the row/column in question
+
+        // type 2: A square is alone to be able to have a number on a specific row or column
+        // Then all cells in that square that is not on that row/column can have the number removed
+
+        boolean hasPossibilitiesBeenRemoved = false;
+        int[][][] squares = getSquaresPossibilitiesArray(); //TODO is it worth recalculating this, sort and copy after every discovery[...]
+        // or is it more efficient to get less progress here and rely more on algorithm 1&2 figuring out numbers?
+
+        for (int sq = 0; sq < 9; sq++) {
+            //type 1 rows
+
+            ArrayList<Integer> top = ListAndArrayUtils.intArrayToIntegerList(squares[sq][0]);
+            top.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][1]));
+            top.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][2]));
+
+            ArrayList<Integer> mid = ListAndArrayUtils.intArrayToIntegerList(squares[sq][3]);
+            mid.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][4]));
+            mid.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][5]));
+
+            ArrayList<Integer> bot = ListAndArrayUtils.intArrayToIntegerList(squares[sq][6]);
+            bot.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][7]));
+            bot.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[sq][8]));
+
+            int[][] squareRowPossibilities = new int[3][];
+            squareRowPossibilities[0] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(top));
+            squareRowPossibilities[1] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(mid));
+            squareRowPossibilities[2] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(bot));
+
+            for (int numToCheck = 0; numToCheck < 9; numToCheck++) {
+                int index = ListAndArrayUtils.singlePossibleFinder(squareRowPossibilities, numToCheck);
+                if (index == -1) {
+                    continue;
+                }
+                int rowToAffect = SodukuCoordUtils.squareNrAndPosToRow(sq, index * 3);
+                int firstColInSq = SodukuCoordUtils.topLeftCol(SodukuCoordUtils.squareNrAndPosToCol(sq, 0));
+                int[] columnsToAffect = new int[6];
+                switch (firstColInSq) {
+                    case 0: columnsToAffect = new int[]{3, 4, 5, 6, 7, 8};
+                        break;
+                    case 3: columnsToAffect = new int[]{0, 1, 2, 6, 7, 8};
+                        break;
+                    case 6: columnsToAffect = new int[]{0, 1, 2, 3, 4, 5};
+                        break;
+                }
+                for (int i : columnsToAffect) {
+                    removePossibilityCell(rowToAffect, i, numToCheck);
+                }
+                hasPossibilitiesBeenRemoved = true;
+            }
+
+            // type 1 column
+
+            ArrayList<Integer> left = ListAndArrayUtils.intArrayToIntegerList(squares[0][sq]);
+            left.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[1][sq]));
+            left.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[2][sq]));
+
+            ArrayList<Integer> center = ListAndArrayUtils.intArrayToIntegerList(squares[3][sq]);
+            center.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[4][sq]));
+            center.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[5][sq]));
+
+            ArrayList<Integer> right = ListAndArrayUtils.intArrayToIntegerList(squares[6][sq]);
+            right.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[7][sq]));
+            right.addAll(ListAndArrayUtils.intArrayToIntegerList(squares[8][sq]));
+
+            int[][] squareColPossibilities = new int[3][];
+            squareColPossibilities[0] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(left));
+            squareColPossibilities[1] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(center));
+            squareColPossibilities[2] = ListAndArrayUtils.integerListToIntArray(ListAndArrayUtils.sortUnique(right));
+
+            for (int numToCheck = 0; numToCheck < 9; numToCheck++) {
+                int index = ListAndArrayUtils.singlePossibleFinder(squareColPossibilities, numToCheck);
+                if (index == -1) {
+                    continue;
+                }
+                int colToAffect = SodukuCoordUtils.squareNrAndPosToRow(sq, index * 3);
+                int firstRowInSq = SodukuCoordUtils.topLeftRow(SodukuCoordUtils.squareNrAndPosToRow(sq, 0));
+                int[] rowsToAffect = new int[6];
+                switch (firstRowInSq) {
+                    case 0: rowsToAffect = new int[]{3, 4, 5, 6, 7, 8};
+                        break;
+                    case 3: rowsToAffect = new int[]{0, 1, 2, 6, 7, 8};
+                        break;
+                    case 6: rowsToAffect = new int[]{0, 1, 2, 3, 4, 5};
+                        break;
+                }
+                for (int i : rowsToAffect) {
+                    removePossibilityCell(colToAffect, i, numToCheck);
+                }
+                hasPossibilitiesBeenRemoved = true;
+            }
+        }
+
+        // type 2
+        ArrayList<Integer> indexes;
+        for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
-                if (data[j] != null) {
-                    for (int k : data[j]) {
-                        if (k == i) {
-                            return j;
-                        }
-                    }
+                indexes = ListAndArrayUtils.findInside2dArray(everythingPossible[i], j);
+                if (! indexes.isEmpty() || indexes.size() > 3) { // j does not appear on row or cant be limited to one square
+                    j += 0;
                 }
             }
         }
-        return -1;
+
+
+        return hasPossibilitiesBeenRemoved;
     }
 
-    /**
-     * Takes a int[][] 'array' and a int 'numToTest' to test. If numToTest is inside two or more of the inner arrays in
-     * array this method returns true, else it returns false
-     *
-     * @param array     a 2-dimensional int array
-     * @param numToTest a number to check existence of
-     * @return true if numToTest is inside two or more of the inner arrays. false if numToTest occurs zero or one time.
-     */
-    private boolean isInMultiple(int[][] array, int numToTest) {
-        int timesSeen = 0;
-        for (int[] innerArray : array) {
-            if (innerArray != null) {
-                for (int number : innerArray) { // skips then innerArray = null ?
-                    if (number == numToTest) {
-                        if (++timesSeen > 1) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return timesSeen == 0; //only timesSeen == 1 should return false
-    }
 }
