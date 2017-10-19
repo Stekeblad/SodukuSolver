@@ -445,18 +445,7 @@ public class SodukuSolver {
                 }
             }
         }
-
-        // De-duplicating answers
-        ArrayList<Triple<Integer, Integer, Integer>> filteredAnswers = new ArrayList<>();
-        int x = 0;
-        while (answers.size() > 0) {
-            filteredAnswers.add(answers.get(0));
-            while (answers.remove(filteredAnswers.get(x))) {
-            } // remove only removes first occurrence and returns true if it removed something, I want to remove all occurrences. removeAll takes a list of different values
-            x++;
-        }
-
-        return filteredAnswers;
+        return answers;
     }
 
     /**
