@@ -1,6 +1,5 @@
 package main.java.SodukuSolver;
 
-
 import main.java.SodukuUtils.CoordToSquareNr;
 import main.java.SodukuUtils.NumSeen;
 import main.java.Utils.ListArrayConverter;
@@ -10,7 +9,6 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * A class made for solving soduku.
@@ -21,11 +19,7 @@ public class SodukuSolver {
 
     private int[][] playfield = new int[9][9];
     private Boolean isInitialized = false;
-
-    private int[][] squareResult;
-    private int[][] rowResult;
-    private int[][] columnResult;
-
+    private int[][][] everythingPossible;
 
     /**
      * Default constructor, call setPlayfield before using any other method
@@ -48,6 +42,11 @@ public class SodukuSolver {
         return playfield;
     }
 
+    /**
+     * Set or change the playfield (soduku board) to be solved
+     *
+     * @param newPlayfield a int[9][9] that describes a soduku board to solve
+     */
     void setPlayfield(int[][] newPlayfield) {
         playfield = newPlayfield;
         isInitialized = true;
@@ -63,20 +62,30 @@ public class SodukuSolver {
             return false;
         }
 
-        squareResult = new int[9][];
-        rowResult = new int[9][];
-        columnResult = new int[9][];
-
         // Preparations
 
-        for (int r = 0, squareCount = 0; r < 9; r += 3) {
-            for (int c = 0; c < 9; c += 3, squareCount++) {
-                squareResult[squareCount] = scanSquare(r, c);
-            }
+        int[][] colResult = new int[9][];
+        int[][] sqResult = new int[9][];
+        int[][] rowResult = new int[9][];
+        for (int i = 0, j = 0; i < 3; i++) {
+            sqResult[j++] = scanSquare(i * 3, 0);
+            sqResult[j++] = scanSquare(i * 3, 3);
+            sqResult[j++] = scanSquare(i * 3, 6);
         }
         for (int i = 0; i < 9; i++) {
             rowResult[i] = scanRow(i);
-            columnResult[i] = scanCol(i);
+            colResult[i] = scanCol(i);
+        }
+        everythingPossible = new int[9][9][];
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if (playfield[r][c] != 0) {
+                    everythingPossible[r][c] = new int[]{0};
+                    continue;
+                }
+                everythingPossible[r][c] = findCommons(sqResult[CoordToSquareNr.coordToSquarenr(r, c)],
+                        rowResult[r], colResult[c]);
+            }
         }
 
         // Attempt solving
@@ -92,14 +101,10 @@ public class SodukuSolver {
                     if (playfield[r][c] != 0)
                         continue;
 
-                    int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
-                    int match = findSingleCommon(squareResult[squareNumber],
-                            rowResult[r], columnResult[c]);
-                    if (match != 0) {
+                    if (everythingPossible[r][c].length == 1) {
+                        int match = everythingPossible[r][c][0];
                         playfield[r][c] = match;
-                        squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], match);
-                        rowResult[r] = ShrinkArray.excludeValue(rowResult[r], match);
-                        columnResult[c] = ShrinkArray.excludeValue(columnResult[c], match);
+                        removePossibilities(r, c, match);
                         madeProgress = true;
                     }
                 }
@@ -108,20 +113,21 @@ public class SodukuSolver {
             // Algorithm 2: Places a number if it can only be there (and nowhere else in row/col/sq)
 
             ArrayList<Triple<Integer, Integer, Integer>> results = singlePossible();
-
             if (!results.isEmpty()) {
                 for (Triple<Integer, Integer, Integer> result : results) {
                     int r = result.getLeft();
                     int c = result.getMiddle();
                     int answer = result.getRight();
                     playfield[r][c] = answer;
-                    int squareNumber = CoordToSquareNr.coordToSquarenr(r, c);
-                    squareResult[squareNumber] = ShrinkArray.excludeValue(squareResult[squareNumber], answer);
-                    rowResult[r] = ShrinkArray.excludeValue(rowResult[r], answer);
-                    columnResult[c] = ShrinkArray.excludeValue(columnResult[c], answer);
-                    madeProgress = true;
+                    // Possibilities was removed then the answer was added to the results list
                 }
+                madeProgress = true;
             }
+
+            // Algorithm 3: Locked candidates ("possibilities" with my naming choice) http://www.angusj.com/sudoku/hints.php
+            // Planned but not yet implemented
+
+
         } while (madeProgress);
 
         return validateSolve();
@@ -250,8 +256,6 @@ public class SodukuSolver {
         else return 6;
     }
 
-    // Used by Algorithm 1 & 2
-
     /**
      * Returns a int array of numbers that appears in all three given int arrays
      *
@@ -270,9 +274,9 @@ public class SodukuSolver {
         if (sqList.length == 0 || rowList.length == 0 || colList.length == 0)
             return null; // One or more of the square, the row or the column is already solved. Return.
 
-        List<Integer> sq = new ArrayList<>();
-        List<Integer> row = new ArrayList<>();
-        List<Integer> col = new ArrayList<>();
+        ArrayList<Integer> sq = new ArrayList<>();
+        ArrayList<Integer> row = new ArrayList<>();
+        ArrayList<Integer> col = new ArrayList<>();
 
         for (int aSqList : sqList) sq.add(aSqList);
         for (int aRowList : rowList) row.add(aRowList);
@@ -333,50 +337,64 @@ public class SodukuSolver {
 
     }
 
-    // Used by Algorithm 1
-
     /**
-     * Calls findCommons() and returns 0 if more than one number appeared in all three given int arrays
-     * or the only number that appeared in all three arrays
+     * removes the possibility of value in the cell [r, c]. Safe to call even if value is not a possibility before the call.
      *
-     * @param sqList  squareResult[int]
-     * @param rowList rowResult[int]
-     * @param colList columnResult[int]
-     * @return Returns 0 if more than one or no number appeared in all three given int arrays
-     * or the only number that appeared in all three arrays
-     * @throws Exception if this instance of the class has not been initialized
+     * @param r the row of the target cell
+     * @param c the column of the target cell
+     * @param value the number to remove
      */
-    private int findSingleCommon(int[] sqList, int[] rowList, int[] colList) throws Exception {
-        if (!isInitialized) {
-            throw new Exception("Class not initialized, playfield not set");
-        }
-
-        int[] result = findCommons(sqList, rowList, colList);
-        if (result != null) {
-            if (result.length == 1) {
-                return result[0];
-            }
-        }
-        return 0;
+    private void removePossibilityCell(int r, int c, int value) {
+        everythingPossible[r][c] = ShrinkArray.excludeValue(everythingPossible[r][c], value);
     }
 
+    /**
+     * Use this method then the position of a number becomes known, this will update everythingPossible to reduce the
+     * number of unknown cells that still can contain the found number.
+     *
+     * Removes the possibilities for value on row r, column c and the square this cell is in as well as ALL
+     * possibilities of cell [r, c]. Safe to call even if any of the affected cells has no possibilities.
+     *
+     * @param r the row of the just filled cell
+     * @param c the column of the just filled cell
+     * @param value the number that got placed in the just filled cell
+     */
+    private void removePossibilities(int r, int c, int value) {
+        for (int i = 0; i < 9; i++) { // value can no longer be placed in row r
+            everythingPossible[r][i] = ShrinkArray.excludeValue(everythingPossible[r][i], value);
+        }
+        for (int i = 0; i < 9; i++) { // value can no longer be placed in column c
+            everythingPossible[i][c] = ShrinkArray.excludeValue(everythingPossible[i][c], value);
+        }
+        int row = topLeftRow(r);
+        int col = topLeftCol(c);
+        for (int i = 0; i < 9; i++) { // value can no longer be placed in the square of cell [r, c]
+            everythingPossible[row + i / 3][col + i % 3] = ShrinkArray.excludeValue(
+                    everythingPossible[row + i / 3][col + i % 3], value);
+        }
+        everythingPossible[r][c] = new int[]{}; // Cell now filled, no new numbers can be placed in it
+    }
+
+    /**
+     * Searches through the everythingPossible multidimensional array after numbers that can only be placed in one cell
+     * in a row/column/square. The result of the search is returned in a {@code ArrayList<Triple<Integer, Integer, Integer>>}
+     * if nothing was found a empty list is returned.
+     *<pre>
+     * triple.getLeft() contains a row number
+     * triple.getMiddle() contains a column number
+     * triple.getRight() contains the number that needs to be placed in the specified row and column
+     *</pre>
+     *
+     * @return {@code ArrayList<Triple<Integer, Integer, Integer>>}
+     * @throws Exception if this instance of the class has not been initialized
+     */
     private ArrayList<Triple<Integer, Integer, Integer>> singlePossible() throws Exception {
         if (!isInitialized) {
             throw new Exception("Class not initialized, playfield not set");
         }
 
-        int[][][] everythingPossible = new int[9][9][];
         ArrayList<Triple<Integer, Integer, Integer>> answers = new ArrayList<>();
-        for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                if (playfield[r][c] != 0) {
-                    everythingPossible[r][c] = new int[]{0};
-                    continue;
-                }
-                everythingPossible[r][c] = findCommons(squareResult[CoordToSquareNr.coordToSquarenr(r, c)],
-                        rowResult[r], columnResult[c]);
-            }
-        }
+
         //Square
         for (int sr = 0; sr < 3; sr++) { //square row
             for (int sc = 0; sc < 3; sc++) { // square column
@@ -389,8 +407,10 @@ public class SodukuSolver {
                 for (int i = 1; i < 10; i++) {
                     int position = singlePossibleFinder(squarePossible, i);
                     if (position > -1) {
-                        //position--;
-                        answers.add(new ImmutableTriple<>(sr * 3 + position / 3, sc * 3 + position % 3, i));
+                        int row = sr * 3 + position / 3;
+                        int col = sc * 3 + position % 3;
+                        answers.add(new ImmutableTriple<>(row, col, i));
+                        removePossibilities(row, col, i);
                     }
                 }
             }
@@ -405,8 +425,8 @@ public class SodukuSolver {
             for (int i = 1; i < 10; i++) {
                 int position = singlePossibleFinder(rowPossible, i);
                 if (position > -1) {
-                    //position--;
                     answers.add(new ImmutableTriple<>(r, position, i));
+                    removePossibilities(r, position, i);
                 }
             }
         }
@@ -420,8 +440,8 @@ public class SodukuSolver {
             for (int i = 1; i < 10; i++) {
                 int position = singlePossibleFinder(columnPossible, i);
                 if (position > -1) {
-                    //position--;
                     answers.add(new ImmutableTriple<>(position, c, i));
+                    removePossibilities(position, c, i);
                 }
             }
         }
@@ -441,10 +461,12 @@ public class SodukuSolver {
 
     /**
      * Used by singlePossible to minimize repetitive code.
+     * Searches through a two-dimensional int array after a number and if the number only appears in one of the sub-arrays
+     * the index of that array is returned, else -1 is returned.
      *
-     * @param data ---
-     * @param i    ---
-     * @return a integer >= -1 and <= 8
+     * @param data two-dimensional int array to analyse
+     * @param i number to find single occurrence of
+     * @return a integer >= -1 and <= 8, the index of the only inner array that contains i or -1 if i occurs in no or more than one array.
      */
     private int singlePossibleFinder(int[][] data, int i) {
         if (!isInMultiple(data, i)) {
@@ -460,7 +482,6 @@ public class SodukuSolver {
         }
         return -1;
     }
-
 
     /**
      * Takes a int[][] 'array' and a int 'numToTest' to test. If numToTest is inside two or more of the inner arrays in
