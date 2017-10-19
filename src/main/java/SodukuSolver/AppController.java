@@ -6,7 +6,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import main.java.SodukuUtils.CoordToSquareNr;
 import main.java.SodukuUtils.SodukuLoader;
@@ -20,9 +22,7 @@ public class AppController {
     public Button create;
     public Button solve;
     public GridPane grid11;
-    public Label text_solving;
     public ListView<String> listDefaultSoduku;
-    public ProgressIndicator progressSolving;
     public TextField checkResult;
     public TextField out;
 
@@ -134,8 +134,6 @@ public class AppController {
 
         StopWatch timer = new StopWatch();
         boolean res = false;
-        progressSolving.setVisible(true);
-        text_solving.setVisible(true);
         timer.start();
         try {
             res = sodukuSolver.solve();
@@ -148,8 +146,6 @@ public class AppController {
         } else {
             checkResult.setText("Solve Successful");
         }
-        progressSolving.setVisible(false);
-        text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
         actionEvent.consume();
