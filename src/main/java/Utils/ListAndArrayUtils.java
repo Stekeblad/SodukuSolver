@@ -73,26 +73,6 @@ public class ListAndArrayUtils {
     }
 
     /**
-     * Takes a 2d int array and returns a list of indexes for all sub-arrays containing number.
-     *
-     * @param array a 2d int array to search
-     * @param number a number to search for
-     * @return a int array containing the index of all sub arrays that has at least one element with the value number
-     */
-    public static ArrayList<Integer> findInside2dArray(int[][] array, int number) {
-        ArrayList<Integer> positions = new ArrayList<>();
-        for (int[] subArray:array) {
-            for (int i = 0; i < subArray.length; i++) {
-                if (subArray[i] == number) {
-                    positions.add(i);
-                    break;
-                }
-            }
-        }
-        return positions;
-    }
-
-    /**
      * Searches through a two-dimensional int array after a number and if the number only appears in one of the sub-arrays
      * the index of that array is returned, else -1 is returned.
      *
@@ -102,7 +82,7 @@ public class ListAndArrayUtils {
      */
     public static int singlePossibleFinder(int[][] array, int i) {
         if (!isInMultiple(array, i)) {
-            for (int j = 0; j < 9; j++) {
+            for (int j = 0; j < array.length; j++) {
                 if (array[j] != null) {
                     for (int k : array[j]) {
                         if (k == i) {
@@ -127,7 +107,7 @@ public class ListAndArrayUtils {
         int timesSeen = 0;
         for (int[] innerArray : array) {
             if (innerArray != null) {
-                for (int number : innerArray) { // skips then innerArray = null ?
+                for (int number : innerArray) {
                     if (number == numToTest) {
                         if (++timesSeen > 1) {
                             return true;
@@ -139,6 +119,12 @@ public class ListAndArrayUtils {
         return timesSeen == 0; //only timesSeen == 1 should return false
     }
 
+    /**
+     * First sorts list (smallest first) then removes all doublets from list and returns the results.
+     *
+     * @param list a list to sort and remove multiples from
+     * @return a sorted version of list there all elements from list only appear once.
+     */
     public static ArrayList<Integer> sortUnique(ArrayList<Integer> list) {
         Collections.sort(list);
         int counter = 1;

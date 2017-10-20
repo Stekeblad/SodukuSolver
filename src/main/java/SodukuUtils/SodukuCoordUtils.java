@@ -5,6 +5,10 @@ public class SodukuCoordUtils {
         return (r / 3) * 3 + (c / 3);
     }
 
+    public static int coordToSquareIndex(int r, int c) {
+        return (r % 3) * 3 + (c % 3);
+    }
+
     public static int squareNrAndPosToRow(int square, int pos) {
         return square / 3 * 3 + pos / 3;
     }
@@ -15,7 +19,7 @@ public class SodukuCoordUtils {
 
     /**
      * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
-     * Expected input is between 0 and 8
+     * Intended input is between 0 and 8 but is not checked
      *
      * @param r: a row number
      * @return a row number
@@ -28,7 +32,7 @@ public class SodukuCoordUtils {
 
     /**
      * input less than 3 returns 0, 3-5 returns 3 and greater than 5 returns 6
-     * Expected input is between 0 and 8
+     * Intended input is between 0 and 8 but is not checked
      *
      * @param c: a column number
      * @return a column number

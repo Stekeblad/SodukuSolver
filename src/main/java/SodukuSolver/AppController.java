@@ -133,12 +133,15 @@ public class AppController {
         }
 
         StopWatch timer = new StopWatch();
-        boolean res = false;
+        boolean res;
         timer.start();
         try {
             res = sodukuSolver.solve();
         } catch (Exception e) {
             e.printStackTrace();
+            checkResult.setText(e.getLocalizedMessage());
+            updatePlayfield();
+            return;
         }
         timer.stop();
         if (!res) {
