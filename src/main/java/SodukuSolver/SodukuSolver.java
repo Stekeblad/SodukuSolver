@@ -3,7 +3,9 @@ package main.java.SodukuSolver;
 import main.java.SodukuUtils.NumSeen;
 import main.java.SodukuUtils.SodukuCoordUtils;
 import main.java.Utils.ListAndArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
@@ -16,15 +18,25 @@ import java.util.Collections;
  */
 public class SodukuSolver {
 
+    public enum SolveResults {
+        NOT_TESTED,
+        SOLVED,
+        SOLVE_FAILED,
+        NOT_SOLVABLE,
+        MULTIPLE_SOLUTIONS
+    }
+
     private int[][] playfield = new int[9][9];
     private Boolean isInitialized = false;
     private int[][][] everythingPossible;
+    private SolveResults solveResult;
 
     /**
      * Default constructor, call setPlayfield before using any other method
      */
     public SodukuSolver() {
         isInitialized = false;
+        solveResult = SolveResults.NOT_TESTED;
     }
 
     /**
@@ -35,6 +47,7 @@ public class SodukuSolver {
     public SodukuSolver(int[][] array) {
         playfield = array;
         isInitialized = true;
+        solveResult = SolveResults.NOT_TESTED;
     }
 
     int[][] getPlayfield() {
@@ -45,10 +58,41 @@ public class SodukuSolver {
      * Set or change the playfield (soduku board) to be solved
      *
      * @param newPlayfield a int[9][9] that describes a soduku board to solve
+     * @return false if the playfield contains any number smaller then zero or larger then nine, true otherwise.
      */
-    void setPlayfield(int[][] newPlayfield) {
+    boolean setPlayfield(int[][] newPlayfield) {
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                if (newPlayfield[row][col] < 0 || newPlayfield[row][col] > 9) {
+                    return false;
+                }
+            }
+        }
         playfield = newPlayfield;
         isInitialized = true;
+        solveResult = SolveResults.NOT_TESTED;
+        return true;
+    }
+
+    /**
+     * Returns a enum SolveResults value telling if the soduku was solve, cant be solved, has multiple solution etc.
+     * To see the result the resulting playfield is accessible via getPlayfield().
+     * <p>
+     *     NOT_TESTED means that solve() has not been called since the current playfield was set.
+     * </p><p>
+     *     SOLVED means the soduku was solved.
+     * </p><p>
+     *     SOLVE_FAILED means the soduku was not solved and none of the following states could be proved.
+     * </p><p>
+     *     NOT_SOLVABLE means the soduku has no solution, it can not be solved.
+     * </p><p>
+     *     MULTIPLE_SOLUTIONS means that the soduku has more than one possible solution.
+     * </p>
+     *
+     * @return enum SolveResults
+     */
+    SolveResults getSolveResult() {
+        return solveResult;
     }
 
     /**
@@ -56,9 +100,15 @@ public class SodukuSolver {
      *
      * @return true if the soduku was solved, false otherwise
      */
-    Boolean solve() throws Exception {
+    void solve() throws Exception {
         if (!isInitialized) {
-            return false;
+            return;
+        }
+
+        // First check the given board
+
+        if (! isPlayfieldValid()) {
+            return;
         }
 
         // Preparations
@@ -94,7 +144,10 @@ public class SodukuSolver {
         do {
             madeProgress = false;
             if (iterationCounter > 100) {
-                throw new Exception("Solve aborted! Locked looping with faked progress!");
+                validateSolve();
+                System.err.println("Solve aborted! Locked looping with faked progress!");
+                //throw new Exception("Solve aborted! Locked looping with faked progress!");
+                return;
             }
             // Algorithm 1: Places a number if it is the only one who can be in a cell
 
@@ -128,39 +181,101 @@ public class SodukuSolver {
 
             // Algorithm 3: Locked candidates ("possibilities" with my naming choice) http://www.angusj.com/sudoku/hints.php
 
-            if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
-                madeProgress = true;
-            }
+            //if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
+            //    madeProgress = true;
+            //}
 
             iterationCounter++;
         } while (madeProgress);
 
-        return validateSolve();
+        validateSolve();
     }
 
-    private Boolean validateSolve() {
-        try {
-            for (int r = 0; r < 9; r += 3) {
-                for (int c = 0; c < 9; c += 3) {
-                    if (scanSquare(r, c).length != 0) {
+    /**
+     * Called in the beginning of solve() to make a quick check if the set board is solvable
+     * Tests if a number appear more than once in a single row, column or square. The amount of given numbers are also
+     * counted because if less than 17 numbers are given it has been proved to not have exactly one solution.
+     * If false is returned, solveResult has been set to contain NOT_SOLVABLE or MULTIPLE_SOLUTIONS.
+     *
+     * @return false if there are definitely not exact one solution (#solutions != 1) and true if this quick check could
+     * not tell how many solutions there are (0, 1 or >1)
+     */
+    private boolean isPlayfieldValid() {
+        boolean seenInRow[][] = new boolean[9][10];
+        boolean seenInCol[][] = new boolean[9][10];
+        boolean seenInSq[][] = new boolean[9][10];
+        int numbersGiven = 0;
+
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                int sq = SodukuCoordUtils.coordToSquareNr(row, col);
+                int number = playfield[row][col];
+                if(number != 0) {
+                    numbersGiven++;
+                    if (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number]) {
+                        solveResult = SolveResults.NOT_SOLVABLE; // at least one number appears >1 time in a row/col/square
                         return false;
+                    } else {
+                        seenInCol[col][number] = true;
+                        seenInRow[row][number] = true;
+                        seenInSq[sq][number] = true;
                     }
                 }
             }
-            for (int r = 0; r < 9; r++) {
-                if (scanRow(r).length != 0) {
-                    return false;
-                }
-            }
-            for (int c = 0; c < 9; c++) {
-                if (scanCol(c).length != 0) {
-                    return false;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        if (numbersGiven < 17) { // It has been proved that no soduku with less than 17 clues can have exactly one solution.
+            solveResult = SolveResults.MULTIPLE_SOLUTIONS;
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Tries to decide if the soduku has been solved or not, if it can't be solved or if it has multiple solutions and
+     * sets the variable solveResult accordingly
+     */
+    private void validateSolve() throws Exception {
+        boolean numbersMissing = false;
+        ArrayList<Pair<Integer, Integer>> possibilitiesToStudy = new ArrayList<>();
+
+        if (! isPlayfieldValid()) {
+            // something is wrong in the solving algorithms
+            System.err.println("isPlayfieldValid inside validateSolve returned false. Something is wrong in the solving algorithms");
+            return;
+        }
+        for (int row = 0; row < 9; row++) {
+            for (int col = 0; col < 9; col++) {
+                if (playfield[row][col] == 0) {
+                    numbersMissing = true;
+                    if (everythingPossible[row][col].length == 0) {
+                        // A cell is empty and it is not possible to place any number in it without breaking the unique in row/col/sq law
+                        solveResult = SolveResults.NOT_SOLVABLE;
+                        return;
+                    } else if (everythingPossible[row][col].length == 1) { // Now something is wrong!
+                        solveResult = SolveResults.SOLVE_FAILED;
+                        System.err.println("Now something is wrong! validateSolve is running and the cell [" + row + ", " + col + "] has one possibility");
+                        return;
+                    } else {
+                        possibilitiesToStudy.add(new ImmutablePair<>(row, col));
+                    }
+                }
+            }
+        }
+
+        //if (possibilitiesToStudy.isEmpty())
+        //{
+            if (numbersMissing) {
+                solveResult = SolveResults.SOLVE_FAILED;
+            } else {
+                solveResult = SolveResults.SOLVED;
+            }
+            return;
+        //}
+
+        // Ignore case "multiple solutions" until a algorithm is invented
+
+        //solveResult = SolveResults.MULTIPLE_SOLUTIONS;
     }
 
     /**
