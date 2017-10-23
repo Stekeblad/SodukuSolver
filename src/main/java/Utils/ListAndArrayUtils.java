@@ -137,4 +137,13 @@ public class ListAndArrayUtils {
         }
         return list;
     }
+
+    public static boolean arrayContains(int[] array, int numToTest) {
+        for (int a : array) {
+            if (a == numToTest) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -46,4 +46,19 @@ public class PossibilityMegadump {
         }
 
     }
+
+    public static void dumpPlayfield(int[][] playfield){
+        for (int row = 0; row < 9; row ++) {
+            for (int col = 0; col < 9; col++) {
+                if (playfield[row][col]== 0) {
+                    System.err.print(" ");
+                } else {
+                    System.err.print(playfield[row][col]);
+                }
+                System.err.print(" ");
+            }
+            System.err.print("\n");
+        }
+        System.err.print("\n\n");
+    }
 }

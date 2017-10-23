@@ -50,6 +50,10 @@ public class SodukuSolver {
         solveResult = SolveResults.NOT_TESTED;
     }
 
+	/**
+     * used if you want to know how the playfield looks after the solve attempt
+     * @return int[9][9] containing the playfield
+     */
     int[][] getPlayfield() {
         return playfield;
     }
@@ -77,17 +81,12 @@ public class SodukuSolver {
     /**
      * Returns a enum SolveResults value telling if the soduku was solve, cant be solved, has multiple solution etc.
      * To see the result the resulting playfield is accessible via getPlayfield().
-     * <p>
-     *     NOT_TESTED means that solve() has not been called since the current playfield was set.
-     * </p><p>
-     *     SOLVED means the soduku was solved.
-     * </p><p>
-     *     SOLVE_FAILED means the soduku was not solved and none of the following states could be proved.
-     * </p><p>
-     *     NOT_SOLVABLE means the soduku has no solution, it can not be solved.
-     * </p><p>
-     *     MULTIPLE_SOLUTIONS means that the soduku has more than one possible solution.
-     * </p>
+     * <pre>
+     *     NOT_TESTED         solve() has not been called since the current playfield was set.
+     *     SOLVED             the soduku was solved.
+     *     SOLVE_FAILED       the soduku was not solved and none of the following states could be proved.
+     *     NOT_SOLVABLE       the soduku has no solution, it can not be solved.
+     *     MULTIPLE_SOLUTIONS the soduku has more than one possible solution.
      *
      * @return enum SolveResults
      */
@@ -97,8 +96,6 @@ public class SodukuSolver {
 
     /**
      * Tries to solve the set grid
-     *
-     * @return true if the soduku was solved, false otherwise
      */
     void solve() throws Exception {
         if (!isInitialized) {
@@ -181,9 +178,9 @@ public class SodukuSolver {
 
             // Algorithm 3: Locked candidates ("possibilities" with my naming choice) http://www.angusj.com/sudoku/hints.php
 
-            //if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
-            //    madeProgress = true;
-            //}
+            if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
+                madeProgress = true;
+            }
 
             iterationCounter++;
         } while (madeProgress);
@@ -596,33 +593,33 @@ public class SodukuSolver {
                 int rowToAffect = SodukuCoordUtils.squareNrAndPosToRow(sq, index * 3);
                 int firstColInSq = SodukuCoordUtils.squareNrAndPosToCol(sq, 0);
                 int[] columnsToAffect = new int[6];
-                int[] sqIndexToAffect = new int[3];
+                int[] sqIndexToAffect = new int[]{index * 3, index * 3 + 1, index * 3 + 2};
                 int[] squaresToAffect = new int[2];
                 switch (firstColInSq) {
                     case 0:
                         columnsToAffect = new int[]{3, 4, 5, 6, 7, 8};
-                        sqIndexToAffect = new int[]{0, 1, 2};
                         squaresToAffect = new int[]{sq + 1, sq + 2};
                         break;
                     case 3:
                         columnsToAffect = new int[]{0, 1, 2, 6, 7, 8};
-                        sqIndexToAffect = new int[]{3, 4, 5};
                         squaresToAffect = new int[]{sq - 1, sq + 1};
                         break;
                     case 6:
                         columnsToAffect = new int[]{0, 1, 2, 3, 4, 5};
-                        sqIndexToAffect = new int[]{6, 7, 8};
                         squaresToAffect = new int[]{sq - 2, sq - 1};
                         break;
                 }
                 for (int c : columnsToAffect) {
-                    removePossibilityCell(rowToAffect, c, numToCheck);
+                    // Do not report progress for unchanged everythingPossible
+                    if (ListAndArrayUtils.arrayContains(everythingPossible[rowToAffect][c], numToCheck)) {
+                        removePossibilityCell(rowToAffect, c, numToCheck);
+                        hasPossibilitiesBeenRemoved = true;
+                    }
                 }
-                for (int i : sqIndexToAffect) {
+                for (int i : sqIndexToAffect) { // waste of cpu to check if it is in array or not, it will not be there afterwards anyway
                     squares[squaresToAffect[0]][i] = ListAndArrayUtils.excludeValue(squares[squaresToAffect[0]][i], numToCheck);
                     squares[squaresToAffect[1]][i] = ListAndArrayUtils.excludeValue(squares[squaresToAffect[1]][i], numToCheck);
                 }
-                hasPossibilitiesBeenRemoved = true;
             }
 
             // type 1 column
@@ -652,30 +649,30 @@ public class SodukuSolver {
                 int colToAffect = SodukuCoordUtils.squareNrAndPosToCol(sq, index);
                 int firstRowInSq = SodukuCoordUtils.squareNrAndPosToRow(sq, 0);
                 int[] rowsToAffect = new int[6];
-                int[] sqIndexToAffect = new int[3];
+                int[] sqIndexToAffect = new int[]{index % 3, (index % 3) + 3, (index % 3) + 6};
                 int[] squaresToAffect = new int[2];
                 switch (firstRowInSq) {
                     case 0: rowsToAffect = new int[]{3, 4, 5, 6, 7, 8};
-                        sqIndexToAffect = new int[]{0, 1, 2};
                         squaresToAffect = new int[]{sq + 3, sq + 6};
                         break;
                     case 3: rowsToAffect = new int[]{0, 1, 2, 6, 7, 8};
-                        sqIndexToAffect = new int[]{3, 4, 5};
                         squaresToAffect = new int[]{sq - 3, sq + 3};
                         break;
                     case 6: rowsToAffect = new int[]{0, 1, 2, 3, 4, 5};
-                        sqIndexToAffect = new int[]{6, 7, 8};
                         squaresToAffect = new int[]{sq - 6, sq - 3};
                         break;
                 }
                 for (int r : rowsToAffect) {
-                    removePossibilityCell(r, colToAffect, numToCheck);
+                    // Do not report progress for unchanged everythingPossible
+                    if (ListAndArrayUtils.arrayContains(everythingPossible[r][colToAffect], numToCheck)) {
+                        removePossibilityCell(r, colToAffect, numToCheck);
+                        hasPossibilitiesBeenRemoved = true;
+                    }
                 }
-                for (int i : sqIndexToAffect) {
+                for (int i : sqIndexToAffect) { // waste of cpu to check if it is in array or not, it will not be there afterwards anyway
                     squares[squaresToAffect[0]][i] = ListAndArrayUtils.excludeValue(squares[squaresToAffect[0]][i], numToCheck);
                     squares[squaresToAffect[1]][i] = ListAndArrayUtils.excludeValue(squares[squaresToAffect[1]][i], numToCheck);
                 }
-                hasPossibilitiesBeenRemoved = true;
             }
         }
 
@@ -715,10 +712,15 @@ public class SodukuSolver {
                         break;
                 }
                 for (int p : sqPositionsToAffect) {
-                    removePossibilityCell(SodukuCoordUtils.squareNrAndPosToRow(sqToAffect, p),
-                            SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p), numToCheck);
+                    int row = SodukuCoordUtils.squareNrAndPosToRow(sqToAffect, p);
+                    int col = SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p);
+
+                    // Do not report progress for unchanged everythingPossible
+                    if (ListAndArrayUtils.arrayContains(everythingPossible[row][col], numToCheck)) {
+                        removePossibilityCell(row, col, numToCheck);
+                        hasPossibilitiesBeenRemoved = true;
+                    }
                 }
-                hasPossibilitiesBeenRemoved = true;
             }
 
         }
@@ -759,10 +761,15 @@ public class SodukuSolver {
                         break;
                 }
                 for (int p : sqPositionsToAffect) {
-                    removePossibilityCell(SodukuCoordUtils.squareNrAndPosToRow(sqToAffect, p),
-                            SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p), numToCheck);
+                    int row = SodukuCoordUtils.squareNrAndPosToRow(sqToAffect, p);
+                    int col = SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p);
+
+                    // Do not report progress for unchanged everythingPossible
+                    if (ListAndArrayUtils.arrayContains(everythingPossible[row][col], numToCheck)) {
+                        removePossibilityCell(row, col, numToCheck);
+                        hasPossibilitiesBeenRemoved = true;
+                    }
                 }
-                hasPossibilitiesBeenRemoved = true;
             }
         }
 
