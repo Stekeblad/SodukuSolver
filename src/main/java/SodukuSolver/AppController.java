@@ -123,7 +123,9 @@ public class AppController {
         try {
             sodukuSolver.solve();
         } catch (Exception e) {
-            checkResult.setText(e.getLocalizedMessage());
+            e.printStackTrace();
+            checkResult.setText(e.toString());
+            out.setText("ERROR!");
             updatePlayfield();
             return;
         }

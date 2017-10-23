@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * A class made for solving soduku.
@@ -129,7 +129,7 @@ public class SodukuSolver {
                     everythingPossible[r][c] = new int[]{0};
                     continue;
                 }
-                everythingPossible[r][c] = findCommons(sqResult[SodukuCoordUtils.coordToSquareNr(r, c)],
+                everythingPossible[r][c] = ListAndArrayUtils.findCommons(sqResult[SodukuCoordUtils.coordToSquareNr(r, c)],
                         rowResult[r], colResult[c]);
             }
         }
@@ -179,6 +179,12 @@ public class SodukuSolver {
             // Algorithm 3: Locked candidates ("possibilities" with my naming choice) http://www.angusj.com/sudoku/hints.php
 
             if (lockedPossibilities()) { // true if some possibilities was removed, maybe algorithm 1 or 2 can make new progress now
+                madeProgress = true;
+            }
+
+            // Algorithm 4: Naked Pair
+
+            if (nakedPairs()) { // Does also just remove possibilities and does not place any numbers on the board
                 madeProgress = true;
             }
 
@@ -348,87 +354,6 @@ public class SodukuSolver {
     }
 
     /**
-     * Returns a int array of numbers that appears in all three given int arrays
-     *
-     * @param sqList  squareResult[int]
-     * @param rowList rowResult[int]
-     * @param colList columnResult[int]
-     * @return a int array containing all numbers that appear in all three given arrays, if the returned array only
-     * contains a zero it means there are no common numbers.
-     * @throws Exception if this instance of the class has not been initialized
-     */
-    private int[] findCommons(int[] sqList, int[] rowList, int[] colList) throws Exception {
-        if (!isInitialized) {
-            throw new Exception("Class not initialized, playfield not set");
-        }
-
-        if (sqList.length == 0 || rowList.length == 0 || colList.length == 0)
-            return null; // One or more of the square, the row or the column is already solved. Return.
-
-        ArrayList<Integer> sq = new ArrayList<>();
-        ArrayList<Integer> row = new ArrayList<>();
-        ArrayList<Integer> col = new ArrayList<>();
-
-        for (int aSqList : sqList) sq.add(aSqList);
-        for (int aRowList : rowList) row.add(aRowList);
-        for (int aColList : colList) col.add(aColList);
-
-        Collections.sort(sq);
-        Collections.sort(row);
-        Collections.sort(col);
-
-        // First matching row and column, then adding the square to it
-        int x = 0;
-        int rowLen = row.size();
-        int colLen = col.size();
-
-        while (rowLen > x && colLen > x) {
-            if (row.get(x).equals(col.get(x))) {
-                x++;
-            } else if (row.get(x) < col.get(x)) {
-                row.remove(x);
-                rowLen--;
-            } else {
-                col.remove(x);
-                colLen--;
-            }
-        }
-        while (rowLen > colLen) {
-            row.remove(--rowLen);
-        }
-        while (rowLen < colLen) {
-            col.remove(--colLen);
-        }
-
-        // row and col are now identical. Now to Sq as well
-        x = 0;
-        int sqLen = sq.size();
-
-        while (rowLen > x && sqLen > x) {
-            if (row.get(x).equals(sq.get(x))) {
-                x++;
-            } else if (row.get(x) < sq.get(x)) {
-                row.remove(x);
-                rowLen--;
-            } else {
-                sq.remove(x);
-                sqLen--;
-            }
-        }
-        while (rowLen > sqLen) {
-            row.remove(--rowLen);
-        }
-        while (rowLen < sqLen) {
-            sq.remove(--sqLen);
-        }
-        // now is sq == col && col == row ( and therefor sq == row )
-        if (row.isEmpty())
-            return new int[]{0};
-        return ListAndArrayUtils.integerListToIntArray(row);
-
-    }
-
-    /**
      * removes the possibility of value in the cell [r, c]. Safe to call even if value is not a possibility before the call.
      *
      * @param r the row of the target cell
@@ -485,6 +410,17 @@ public class SodukuSolver {
             }
         }
         return arraySquares;
+    }
+
+    private int[][][] getColumnPossibilities() {
+        int[][][] columnPossibilities = new int[9][][];
+        for (int col = 0; col < 9; col++) {
+            columnPossibilities[col] = new int[9][];
+            for (int row = 0; row < 9; row++) {
+                columnPossibilities[col][row] = everythingPossible[row][col];
+            }
+        }
+        return columnPossibilities;
     }
 
     /**
@@ -560,7 +496,7 @@ public class SodukuSolver {
         // type 2: A square is alone to be able to have a number on a specific row or column
         // Then all cells in that square that is not on that row/column can have the number removed
 
-        // This method is long and does almost the same thing four times, I don't see a easy way to split it up.
+        // This method is long and does almost the same thing four times, but I don't see any good ways to split it up.
 
         boolean hasPossibilitiesBeenRemoved = false;
         int[][][] squares = getSquaresPossibilitiesArray();
@@ -611,7 +547,7 @@ public class SodukuSolver {
                 }
                 for (int c : columnsToAffect) {
                     // Do not report progress for unchanged everythingPossible
-                    if (ListAndArrayUtils.arrayContains(everythingPossible[rowToAffect][c], numToCheck)) {
+                    if (ListAndArrayUtils.contains(everythingPossible[rowToAffect][c], numToCheck)) {
                         removePossibilityCell(rowToAffect, c, numToCheck);
                         hasPossibilitiesBeenRemoved = true;
                     }
@@ -664,7 +600,7 @@ public class SodukuSolver {
                 }
                 for (int r : rowsToAffect) {
                     // Do not report progress for unchanged everythingPossible
-                    if (ListAndArrayUtils.arrayContains(everythingPossible[r][colToAffect], numToCheck)) {
+                    if (ListAndArrayUtils.contains(everythingPossible[r][colToAffect], numToCheck)) {
                         removePossibilityCell(r, colToAffect, numToCheck);
                         hasPossibilitiesBeenRemoved = true;
                     }
@@ -716,7 +652,7 @@ public class SodukuSolver {
                     int col = SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p);
 
                     // Do not report progress for unchanged everythingPossible
-                    if (ListAndArrayUtils.arrayContains(everythingPossible[row][col], numToCheck)) {
+                    if (ListAndArrayUtils.contains(everythingPossible[row][col], numToCheck)) {
                         removePossibilityCell(row, col, numToCheck);
                         hasPossibilitiesBeenRemoved = true;
                     }
@@ -765,7 +701,7 @@ public class SodukuSolver {
                     int col = SodukuCoordUtils.squareNrAndPosToCol(sqToAffect, p);
 
                     // Do not report progress for unchanged everythingPossible
-                    if (ListAndArrayUtils.arrayContains(everythingPossible[row][col], numToCheck)) {
+                    if (ListAndArrayUtils.contains(everythingPossible[row][col], numToCheck)) {
                         removePossibilityCell(row, col, numToCheck);
                         hasPossibilitiesBeenRemoved = true;
                     }
@@ -776,4 +712,95 @@ public class SodukuSolver {
         return hasPossibilitiesBeenRemoved;
     }
 
+    private boolean nakedPairs() {
+        boolean hasPossibilitiesBeenRemoved = false;
+
+        for (int type = 0; type < 3; type++) {
+            int[][][] dataset = new int[9][][];
+            switch (type) {
+                case 0:
+                    dataset = getSquaresPossibilitiesArray();
+                    break;
+                case 1:
+                    dataset = getColumnPossibilities();
+                    break;
+                case 2:
+                    dataset = everythingPossible; // rows in first dimension
+            }
+
+
+            for (int dimOneRow = 0; dimOneRow < 9; dimOneRow++) {
+                ArrayList<Integer> possiblePairs = new ArrayList<>();
+                for (int i = 0; i < 9; i++) {
+                    if (dataset[dimOneRow][i].length == 2) {
+                        possiblePairs.add(i);
+                    }
+                }
+
+                for (int x = 0; x < possiblePairs.size(); x++) {
+                    if (possiblePairs.size() < 2) {
+                        break;
+                    }
+                    int theSame = 0;
+                    for (int y = x + 1; y < possiblePairs.size(); y++) {
+                        if (Arrays.equals(dataset[dimOneRow][possiblePairs.get(x)], dataset[dimOneRow][possiblePairs.get(y)])) {
+                            theSame++;
+                        }
+                    }
+                    if (theSame == 0) {
+                        possiblePairs.remove(x);
+                        x--;
+                    } else if (theSame > 1) {
+                        for (int y = possiblePairs.size(); y > x; y--) {
+                            if (Arrays.equals(dataset[dimOneRow][possiblePairs.get(x)], dataset[dimOneRow][possiblePairs.get(y)])) {
+                                possiblePairs.remove(y); // Probably a sign for not being uniquely solvable
+                            }
+                        }
+                        possiblePairs.remove(x);
+                        x--;
+
+                    } else { // theSame == 1
+                        int a = x + 1;
+                        for (; a < possiblePairs.size(); a++) {
+                            if (Arrays.equals(dataset[dimOneRow][possiblePairs.get(x)], dataset[dimOneRow][possiblePairs.get(a)])) {
+                                break;
+                            }
+                        }
+
+                        int pairA = dataset[dimOneRow][possiblePairs.get(x)][0];
+                        int pairB = dataset[dimOneRow][possiblePairs.get(x)][1];
+                        for (int i = 0; i < 9; i++) {
+                            if (possiblePairs.get(x) == i || possiblePairs.get(a) == i) {
+                                continue;
+                            }
+                            int row = 0, col = 0;
+                            switch (type) {
+                                case 0:
+                                    row = SodukuCoordUtils.squareNrAndPosToRow(dimOneRow, i);
+                                    col = SodukuCoordUtils.squareNrAndPosToCol(dimOneRow, i);
+                                    break;
+                                case 1:
+                                    row = i;
+                                    col = dimOneRow;
+                                    break;
+                                case 2:
+                                    row = dimOneRow;
+                                    col = i;
+                            }
+                            if (ListAndArrayUtils.contains(everythingPossible[row][col], pairA) ||
+                                    ListAndArrayUtils.contains(everythingPossible[row][col], pairB)) {
+                                removePossibilityCell(row, col, pairA);
+                                removePossibilityCell(row, col, pairB);
+                                hasPossibilitiesBeenRemoved = true;
+                            }
+                        }
+                        possiblePairs.remove(a);
+                        possiblePairs.remove(x);
+                        x--;
+                    }
+                }
+            }
+        }
+        return hasPossibilitiesBeenRemoved;
+    }
 }

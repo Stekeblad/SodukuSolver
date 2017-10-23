@@ -138,12 +138,95 @@ public class ListAndArrayUtils {
         return list;
     }
 
-    public static boolean arrayContains(int[] array, int numToTest) {
+    /**
+     * Checks if a array contains a specific number
+     * @param array array to analyze
+     * @param numToTest number to check for
+     * @return true if numToTest appear one or more times in array, false otherwise
+     */
+    public static boolean contains(int[] array, int numToTest) {
         for (int a : array) {
             if (a == numToTest) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Returns a int array of numbers that appears in all three given int arrays
+     *
+     * @param sqList  squareResult[int]
+     * @param rowList rowResult[int]
+     * @param colList columnResult[int]
+     * @return a int array containing all numbers that appear in all three given arrays, if the returned array only
+     * contains a zero it means there are no common numbers.
+     */
+    public static int[] findCommons(int[] sqList, int[] rowList, int[] colList) {
+
+        if (sqList.length == 0 || rowList.length == 0 || colList.length == 0)
+            return null; // One or more of the square, the row or the column is already solved. Return.
+
+        ArrayList<Integer> sq = new ArrayList<>();
+        ArrayList<Integer> row = new ArrayList<>();
+        ArrayList<Integer> col = new ArrayList<>();
+
+        for (int aSqList : sqList) sq.add(aSqList);
+        for (int aRowList : rowList) row.add(aRowList);
+        for (int aColList : colList) col.add(aColList);
+
+        Collections.sort(sq);
+        Collections.sort(row);
+        Collections.sort(col);
+
+        // First matching row and column, then adding the square to it
+        int x = 0;
+        int rowLen = row.size();
+        int colLen = col.size();
+
+        while (rowLen > x && colLen > x) {
+            if (row.get(x).equals(col.get(x))) {
+                x++;
+            } else if (row.get(x) < col.get(x)) {
+                row.remove(x);
+                rowLen--;
+            } else {
+                col.remove(x);
+                colLen--;
+            }
+        }
+        while (rowLen > colLen) {
+            row.remove(--rowLen);
+        }
+        while (rowLen < colLen) {
+            col.remove(--colLen);
+        }
+
+        // row and col are now identical. Now to Sq as well
+        x = 0;
+        int sqLen = sq.size();
+
+        while (rowLen > x && sqLen > x) {
+            if (row.get(x).equals(sq.get(x))) {
+                x++;
+            } else if (row.get(x) < sq.get(x)) {
+                row.remove(x);
+                rowLen--;
+            } else {
+                sq.remove(x);
+                sqLen--;
+            }
+        }
+        while (rowLen > sqLen) {
+            row.remove(--rowLen);
+        }
+        while (rowLen < sqLen) {
+            sq.remove(--sqLen);
+        }
+        // now is sq == col && col == row ( and therefor sq == row )
+        if (row.isEmpty())
+            return new int[]{0};
+        return integerListToIntArray(row);
+
     }
 }

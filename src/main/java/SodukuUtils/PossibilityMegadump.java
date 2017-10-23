@@ -51,13 +51,21 @@ public class PossibilityMegadump {
         for (int row = 0; row < 9; row ++) {
             for (int col = 0; col < 9; col++) {
                 if (playfield[row][col]== 0) {
-                    System.err.print(" ");
+                    System.err.print("*");
                 } else {
                     System.err.print(playfield[row][col]);
                 }
-                System.err.print(" ");
+                if (col == 2 || col == 5) {
+                    System.err.print("   ");
+                } else {
+                    System.err.print(" ");
+                }
             }
-            System.err.print("\n");
+            if (row == 2 || row == 5) {
+                System.err.print("\n\n");
+            } else {
+                System.err.print("\n");
+            }
         }
         System.err.print("\n\n");
     }
