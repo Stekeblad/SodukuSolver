@@ -54,7 +54,7 @@ public class SodukuSolver {
      * used if you want to know how the playfield looks after the solve attempt
      * @return int[9][9] containing the playfield
      */
-    int[][] getPlayfield() {
+    public int[][] getPlayfield() {
         return playfield;
     }
 
@@ -64,7 +64,7 @@ public class SodukuSolver {
      * @param newPlayfield a int[9][9] that describes a soduku board to solve
      * @return false if the playfield contains any number smaller then zero or larger then nine, true otherwise.
      */
-    boolean setPlayfield(int[][] newPlayfield) {
+    public boolean setPlayfield(int[][] newPlayfield) {
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 if (newPlayfield[row][col] < 0 || newPlayfield[row][col] > 9) {
@@ -90,14 +90,14 @@ public class SodukuSolver {
      *
      * @return enum SolveResults
      */
-    SolveResults getSolveResult() {
+    public SolveResults getSolveResult() {
         return solveResult;
     }
 
     /**
      * Tries to solve the set grid
      */
-    void solve() throws Exception {
+    public      void solve() throws Exception {
         if (!isInitialized) {
             return;
         }
@@ -491,7 +491,7 @@ public class SodukuSolver {
 
     private boolean lockedPossibilities() {
         // type 1: A number is only possible to place in a single row or a single column inside a square
-        // Then all squares on that row/column can have that number removed from the row/column in question
+        // Then all squares in that row/column can have that number removed from the row/column in question
 
         // type 2: A square is alone to be able to have a number on a specific row or column
         // Then all cells in that square that is not on that row/column can have the number removed

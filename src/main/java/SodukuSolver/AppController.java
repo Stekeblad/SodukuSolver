@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import main.java.SodukuUtils.SodukuCoordUtils;
 import main.java.SodukuUtils.SodukuLoader;
 import org.apache.commons.lang3.time.StopWatch;
 
@@ -72,7 +73,12 @@ public class AppController {
         int[][] sodukuGrid = new int[9][9];
         checkResult.setText("");
         out.setText("");
+        boolean seenInRow[][] = new boolean[9][10];
+        boolean seenInCol[][] = new boolean[9][10];
+        boolean seenInSq[][] = new boolean[9][10];
 
+        // First I iterated over all cells with a for-each loop but after adding checks if a number already is in a
+        // row/column/square It broke and iterated over elements more then once.
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 String id = "cell_" + row + col;
@@ -87,6 +93,15 @@ public class AppController {
                     return false;
                 } else {
                     int number = Character.getNumericValue(tf.getText().charAt(0));
+                    int sq = SodukuCoordUtils.coordToSquareNr(row, col);
+                    if (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number]) {
+                        checkResult.setText(id + " the number " + number + " already seen in this row, column or square");
+                        return false;
+                    }
+
+                    seenInCol[col][number] = true;
+                    seenInRow[row][number] = true;
+                    seenInSq[sq][number] = true;
                     sodukuGrid[row][col] = number;
                 }
             }
