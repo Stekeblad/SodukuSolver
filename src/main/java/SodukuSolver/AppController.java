@@ -1,4 +1,4 @@
-package main.java.sample;
+package main.java.SodukuSolver;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -6,15 +6,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import main.java.SodukuUtils.CoordToSquareNr;
 import main.java.SodukuUtils.SodukuLoader;
 import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
 
 public class AppController {
 
@@ -22,14 +21,11 @@ public class AppController {
     public Button create;
     public Button solve;
     public GridPane grid11;
-    public Label text_solving;
     public ListView<String> listDefaultSoduku;
-    public ProgressIndicator progressSolving;
     public TextField checkResult;
     public TextField out;
 
     private SodukuSolver sodukuSolver = new SodukuSolver();
-    private Logger logger = Logger.getLogger("Soduku.Log");
     private boolean isBoardCreated = false;
 
     @FXML
@@ -49,12 +45,14 @@ public class AppController {
                 }
             }
             // Populate default soduku boards and enable load button
-            // This is a bad solution, I attempted using files but gave up.
-            // Only using this for testing for now
+            // This is a bad solution but it is used for testing and not for user save/load
+            // May change in the future
             ObservableList<String> obsList = FXCollections.observableArrayList();
             obsList.add("easy_1");
             obsList.add("vhard_1");
             obsList.add("\"the most difficult\"");
+            obsList.add("No solution");
+            obsList.add("Multiple solutions");
             listDefaultSoduku.setItems(obsList);
         } else {
             for (int r = 0; r < 9; r++) {
@@ -65,22 +63,16 @@ public class AppController {
                 }
             }
         }
-
         buttonDefaultSoduku.setDisable(false);
         solve.setDisable(false);
-        isBoardCreated  =true;
+        isBoardCreated = true;
     }
 
     private boolean CheckCells() {
         int[][] sodukuGrid = new int[9][9];
         checkResult.setText("");
         out.setText("");
-        boolean seenInRow[][] = new boolean[9][10];
-        boolean seenInCol[][] = new boolean[9][10];
-        boolean seenInSq[][] = new boolean[9][10];
 
-        // First I iterated over all cells with a for-each loop but after adding checks if a number already is in a
-        // row/column/square It broke and iterated over elements more then once.
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 String id = "cell_" + row + col;
@@ -95,21 +87,11 @@ public class AppController {
                     return false;
                 } else {
                     int number = Character.getNumericValue(tf.getText().charAt(0));
-                    int sq = CoordToSquareNr.coordToSquarenr(row, col);
-                    if(number != 0 && (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number])) {
-                        checkResult.setText(id + " the number " + number + " already seen in this row, column or square");
-                        return false;
-                    }
-
-                    seenInCol[col][number] = true;
-                    seenInRow[row][number] = true;
-                    seenInSq[sq][number] = true;
                     sodukuGrid[row][col] = number;
                 }
             }
         }
-        sodukuSolver.setPlayfield(sodukuGrid);
-        return true;
+        return sodukuSolver.setPlayfield(sodukuGrid);
     }
 
     private void updatePlayfield() {
@@ -137,23 +119,27 @@ public class AppController {
         }
 
         StopWatch timer = new StopWatch();
-        boolean res = false;
-        progressSolving.setVisible(true);
-        text_solving.setVisible(true);
         timer.start();
         try {
-            res = sodukuSolver.solve();
+            sodukuSolver.solve();
         } catch (Exception e) {
             e.printStackTrace();
+            checkResult.setText(e.toString());
+            out.setText("ERROR!");
+            updatePlayfield();
+            return;
         }
         timer.stop();
-        if (!res) {
-            checkResult.setText("Solve Failed");
-        } else {
-            checkResult.setText("Solve Successful");
+        SodukuSolver.SolveResults res = sodukuSolver.getSolveResult();
+        switch (res){
+            case SOLVE_FAILED: checkResult.setText("The solver failed to solve the soduku, but it may be solvable");
+                break;
+            case SOLVED: checkResult.setText("Solve Successful");
+                break;
+            case NOT_SOLVABLE: checkResult.setText("There are no solutions for this soduku");
+                break;
+            case MULTIPLE_SOLUTIONS: checkResult.setText("There are more than one solution for this soduku");
         }
-        progressSolving.setVisible(false);
-        text_solving.setVisible(false);
         out.setText("Done in " + timer.getTime(TimeUnit.MICROSECONDS) + " micro seconds");
         updatePlayfield();
         actionEvent.consume();
