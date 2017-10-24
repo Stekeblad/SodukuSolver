@@ -50,8 +50,9 @@ public class SodukuSolver {
         solveResult = SolveResults.NOT_TESTED;
     }
 
-	/**
+    /**
      * used if you want to know how the playfield looks after the solve attempt
+     *
      * @return int[9][9] containing the playfield
      */
     public int[][] getPlayfield() {
@@ -97,14 +98,14 @@ public class SodukuSolver {
     /**
      * Tries to solve the set grid
      */
-    public      void solve() throws Exception {
+    public void solve() throws Exception {
         if (!isInitialized) {
             return;
         }
 
         // First check the given board
 
-        if (! isPlayfieldValid()) {
+        if (!isPlayfieldValid()) {
             return;
         }
 
@@ -182,9 +183,15 @@ public class SodukuSolver {
                 madeProgress = true;
             }
 
-            // Algorithm 4: Naked Pair
+            // Algorithm 4: Naked Pairs
 
             if (nakedPairs()) { // Does also just remove possibilities and does not place any numbers on the board
+                madeProgress = true;
+            }
+
+            // Algorithm 5: Hidden Pairs
+
+            if (hiddenPairs()) {
                 madeProgress = true;
             }
 
@@ -213,7 +220,7 @@ public class SodukuSolver {
             for (int col = 0; col < 9; col++) {
                 int sq = SodukuCoordUtils.coordToSquareNr(row, col);
                 int number = playfield[row][col];
-                if(number != 0) {
+                if (number != 0) {
                     numbersGiven++;
                     if (seenInCol[col][number] || seenInRow[row][number] || seenInSq[sq][number]) {
                         solveResult = SolveResults.NOT_SOLVABLE; // at least one number appears >1 time in a row/col/square
@@ -242,7 +249,7 @@ public class SodukuSolver {
         boolean numbersMissing = false;
         ArrayList<Pair<Integer, Integer>> possibilitiesToStudy = new ArrayList<>();
 
-        if (! isPlayfieldValid()) {
+        if (!isPlayfieldValid()) {
             // something is wrong in the solving algorithms
             System.err.println("isPlayfieldValid inside validateSolve returned false. Something is wrong in the solving algorithms");
             return;
@@ -268,12 +275,12 @@ public class SodukuSolver {
 
         //if (possibilitiesToStudy.isEmpty())
         //{
-            if (numbersMissing) {
-                solveResult = SolveResults.SOLVE_FAILED;
-            } else {
-                solveResult = SolveResults.SOLVED;
-            }
-            return;
+        if (numbersMissing) {
+            solveResult = SolveResults.SOLVE_FAILED;
+        } else {
+            solveResult = SolveResults.SOLVED;
+        }
+        return;
         //}
 
         // Ignore case "multiple solutions" until a algorithm is invented
@@ -356,8 +363,8 @@ public class SodukuSolver {
     /**
      * removes the possibility of value in the cell [r, c]. Safe to call even if value is not a possibility before the call.
      *
-     * @param r the row of the target cell
-     * @param c the column of the target cell
+     * @param r     the row of the target cell
+     * @param c     the column of the target cell
      * @param value the number to remove
      */
     private void removePossibilityCell(int r, int c, int value) {
@@ -367,12 +374,12 @@ public class SodukuSolver {
     /**
      * Use this method then the position of a number becomes known, this will update everythingPossible to reduce the
      * number of unknown cells that still can contain the found number.
-     *
+     * <p>
      * Removes the possibilities for value on row r, column c and the square this cell is in as well as ALL
      * possibilities of cell [r, c]. Safe to call even if any of the affected cells has no possibilities.
      *
-     * @param r the row of the just filled cell
-     * @param c the column of the just filled cell
+     * @param r     the row of the just filled cell
+     * @param c     the column of the just filled cell
      * @param value the number that got placed in the just filled cell
      */
     private void removePossibilities(int r, int c, int value) {
@@ -391,6 +398,13 @@ public class SodukuSolver {
         everythingPossible[r][c] = new int[]{}; // Cell now filled, no new numbers can be placed in it
     }
 
+    /**
+     * Creates a version of everythingPossible that, instead of being ordered [row][column], is order [square][positionInSquare].
+     * It does not update automatically if everythingPossible changes, it has to be done manually or by calling this method
+     * again for a updated version.
+     *
+     * @return a version of everythingPossible indexed after square number and index inside a square
+     */
     private int[][][] getSquaresPossibilitiesArray() {
         // If Java had pointers this part could be more efficient!
         // This int[][][] could be generated once and because this array is just everythingPossible in another order
@@ -412,6 +426,13 @@ public class SodukuSolver {
         return arraySquares;
     }
 
+    /**
+     * Creates a version of everythingPossible that, instead of being ordered [row][column], is order [column][row].
+     * It does not update automatically if everythingPossible changes, it has to be done manually or by calling this method
+     * again for a updated version.
+     *
+     * @return a version of everythingPossible indexed after column then row (not row then column as everythingPossible)
+     */
     private int[][][] getColumnPossibilities() {
         int[][][] columnPossibilities = new int[9][][];
         for (int col = 0; col < 9; col++) {
@@ -427,11 +448,11 @@ public class SodukuSolver {
      * Searches through the everythingPossible multidimensional array after numbers that can only be placed in one cell
      * in a row/column/square. The result of the search is returned in a {@code ArrayList<Triple<Integer, Integer, Integer>>}
      * if nothing was found a empty list is returned.
-     *<pre>
+     * <pre>
      * triple.getLeft() contains a row number
      * triple.getMiddle() contains a column number
      * triple.getRight() contains the number that needs to be placed in the specified row and column
-     *</pre>
+     * </pre>
      *
      * @return {@code ArrayList<Triple<Integer, Integer, Integer>>}
      * @throws Exception if this instance of the class has not been initialized
@@ -489,6 +510,11 @@ public class SodukuSolver {
         return answers;
     }
 
+    /**
+     * Uses the solving technique locked candidates to find possibilities that can be removed.
+     *
+     * @return true if any changes has been made to everythingPossible, otherwise false.
+     */
     private boolean lockedPossibilities() {
         // type 1: A number is only possible to place in a single row or a single column inside a square
         // Then all squares in that row/column can have that number removed from the row/column in question
@@ -588,13 +614,16 @@ public class SodukuSolver {
                 int[] sqIndexToAffect = new int[]{index % 3, (index % 3) + 3, (index % 3) + 6};
                 int[] squaresToAffect = new int[2];
                 switch (firstRowInSq) {
-                    case 0: rowsToAffect = new int[]{3, 4, 5, 6, 7, 8};
+                    case 0:
+                        rowsToAffect = new int[]{3, 4, 5, 6, 7, 8};
                         squaresToAffect = new int[]{sq + 3, sq + 6};
                         break;
-                    case 3: rowsToAffect = new int[]{0, 1, 2, 6, 7, 8};
+                    case 3:
+                        rowsToAffect = new int[]{0, 1, 2, 6, 7, 8};
                         squaresToAffect = new int[]{sq - 3, sq + 3};
                         break;
-                    case 6: rowsToAffect = new int[]{0, 1, 2, 3, 4, 5};
+                    case 6:
+                        rowsToAffect = new int[]{0, 1, 2, 3, 4, 5};
                         squaresToAffect = new int[]{sq - 6, sq - 3};
                         break;
                 }
@@ -640,11 +669,14 @@ public class SodukuSolver {
                 int[] sqPositionsToAffect = new int[6];
                 int sqToAffect = SodukuCoordUtils.coordToSquareNr(r, index * 3);
                 switch (r % 3) {
-                    case 0: sqPositionsToAffect = new int[]{3, 4, 5, 6, 7, 8};
+                    case 0:
+                        sqPositionsToAffect = new int[]{3, 4, 5, 6, 7, 8};
                         break;
-                    case 1: sqPositionsToAffect = new int[]{0, 1, 2, 6, 7, 8};
+                    case 1:
+                        sqPositionsToAffect = new int[]{0, 1, 2, 6, 7, 8};
                         break;
-                    case 2: sqPositionsToAffect = new int[]{0, 1, 2, 3, 4, 5};
+                    case 2:
+                        sqPositionsToAffect = new int[]{0, 1, 2, 3, 4, 5};
                         break;
                 }
                 for (int p : sqPositionsToAffect) {
@@ -689,11 +721,14 @@ public class SodukuSolver {
                 int[] sqPositionsToAffect = new int[6];
                 int sqToAffect = SodukuCoordUtils.coordToSquareNr(index * 3, c);
                 switch (c % 3) {
-                    case 0: sqPositionsToAffect = new int[]{1, 2, 4, 5, 7, 8}; // not 0, 3, 6. (left col)
+                    case 0:
+                        sqPositionsToAffect = new int[]{1, 2, 4, 5, 7, 8}; // not 0, 3, 6. (left col)
                         break;
-                    case 1: sqPositionsToAffect = new int[]{0, 2, 3, 5, 6, 8}; // not 1, 4, 7. (center col)
+                    case 1:
+                        sqPositionsToAffect = new int[]{0, 2, 3, 5, 6, 8}; // not 1, 4, 7. (center col)
                         break;
-                    case 2: sqPositionsToAffect = new int[]{0, 1, 3, 4, 6, 7}; // not 2, 5, 8. (right col)
+                    case 2:
+                        sqPositionsToAffect = new int[]{0, 1, 3, 4, 6, 7}; // not 2, 5, 8. (right col)
                         break;
                 }
                 for (int p : sqPositionsToAffect) {
@@ -712,6 +747,11 @@ public class SodukuSolver {
         return hasPossibilitiesBeenRemoved;
     }
 
+    /**
+     * Uses the solving technique naked pairs to find possibilities that can be removed.
+     *
+     * @return rue if any changes has been made to everythingPossible, otherwise false.
+     */
     private boolean nakedPairs() {
         boolean hasPossibilitiesBeenRemoved = false;
 
@@ -800,6 +840,98 @@ public class SodukuSolver {
                     }
                 }
             }
+        }
+        return hasPossibilitiesBeenRemoved;
+    }
+
+    /**
+     * Uses the solving technique hidden pairs to find possibilities that can be removed.
+     *
+     * @return true if any changes has been made to everythingPossible, otherwise false.
+     */
+    private boolean hiddenPairs() {
+
+        // if two numbers only appear twice in a row/col/sq and both times they are together
+        // then all other numbers in this two cells can be removed
+
+        boolean hasPossibilitiesBeenRemoved = false;
+
+        for (int type = 0; type < 3; type++) {
+            int[][][] dataset = new int[9][][];
+            switch (type) {
+                case 0:
+                    dataset = getSquaresPossibilitiesArray();
+                    break;
+                case 1:
+                    dataset = getColumnPossibilities();
+                    break;
+                case 2:
+                    dataset = everythingPossible; // rows in first dimension
+            }
+
+            for (int dimOneRow = 0; dimOneRow < 9; dimOneRow++) {
+                ArrayList<ArrayList<Integer>> numberAppearsInIndex = new ArrayList<>();
+                numberAppearsInIndex.add(0, new ArrayList<>()); // dummy to not get IndexOutOfBoundsException
+                for (int number = 1; number < 10; number++) {
+                    numberAppearsInIndex.add(number, new ArrayList<>());
+                    for (int index = 0; index < 9; index++) {
+                        if (ListAndArrayUtils.contains(dataset[dimOneRow][index], number)) {
+                            numberAppearsInIndex.get(number).add(index);
+                        }
+                    }
+                }
+                for (int i = 9; i > 0; i--) {
+                    if (numberAppearsInIndex.get(i).size() != 2) {
+                        numberAppearsInIndex.get(i).clear();
+                    }
+                }
+                for (int number = 1; number < 10; number++) {
+                    if (numberAppearsInIndex.get(number).isEmpty()) {
+                        continue;
+                    }
+                    for (int secondNumber = number + 1; secondNumber < 10; secondNumber++) {
+                        if (numberAppearsInIndex.get(secondNumber).isEmpty()) {
+                            continue;
+                        }
+                        if (numberAppearsInIndex.get(number).get(0).equals(numberAppearsInIndex.get(secondNumber).get(0)) &&
+                                numberAppearsInIndex.get(number).get(1).equals(numberAppearsInIndex.get(secondNumber).get(1))) {
+
+                            int row = 0, col = 0;
+                            int row2 = 0, col2 = 0;
+                            switch (type) {
+                                case 0:
+                                    row = SodukuCoordUtils.squareNrAndPosToRow(dimOneRow, numberAppearsInIndex.get(number).get(0));
+                                    col = SodukuCoordUtils.squareNrAndPosToCol(dimOneRow, numberAppearsInIndex.get(number).get(0));
+                                    row2 = SodukuCoordUtils.squareNrAndPosToRow(dimOneRow, numberAppearsInIndex.get(number).get(1));
+                                    col2 = SodukuCoordUtils.squareNrAndPosToCol(dimOneRow, numberAppearsInIndex.get(number).get(1));
+                                    break;
+                                case 1:
+                                    row = numberAppearsInIndex.get(number).get(0);
+                                    col = dimOneRow;
+                                    row2 = numberAppearsInIndex.get(number).get(1);
+                                    col2 = dimOneRow;
+                                    break;
+                                case 2:
+                                    row = dimOneRow;
+                                    col = numberAppearsInIndex.get(number).get(0);
+                                    row2 = dimOneRow;
+                                    col2 = numberAppearsInIndex.get(number).get(1);
+                            }
+                            ArrayList<Integer> possibilities = ListAndArrayUtils.intArrayToIntegerList(dataset[dimOneRow][numberAppearsInIndex.get(number).get(0)]);
+                            possibilities.addAll(ListAndArrayUtils.intArrayToIntegerList(dataset[dimOneRow][numberAppearsInIndex.get(number).get(1)]));
+                            possibilities = ListAndArrayUtils.sortUnique(possibilities);
+                            for (int possibility : possibilities) {
+                                if (number != possibility && secondNumber != possibility) {
+                                    removePossibilityCell(row, col, possibility);
+                                    removePossibilityCell(row2, col2, possibility);
+                                    hasPossibilitiesBeenRemoved = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         }
         return hasPossibilitiesBeenRemoved;
     }

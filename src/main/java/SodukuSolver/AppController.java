@@ -51,6 +51,7 @@ public class AppController {
             ObservableList<String> obsList = FXCollections.observableArrayList();
             obsList.add("easy_1");
             obsList.add("vhard_1");
+            obsList.add("vhard_2");
             obsList.add("\"the most difficult\"");
             obsList.add("No solution");
             obsList.add("Multiple solutions");
